@@ -26,6 +26,7 @@ const ESPORTES_OPCOES = [
   { id: "futsal", label: "Futsal" },
   { id: "society_5", label: "Society 5" },
   { id: "society_7", label: "Society 7" },
+  { id: "campo_11", label: "Campo 11" },
   { id: "volei", label: "Vôlei" },
   { id: "futevolei", label: "Futevôlei" },
   { id: "futmesa", label: "Futmesa" },
@@ -47,27 +48,26 @@ type Quadra = {
   nome?: string;
   cidade?: string;
   endereco?: string;
+  numero?: string;
   observacoes?: string;
   fotoCapaUrl?: string | null;
   fotoCapaPath?: string | null;
   ativo?: boolean;
   comodidades?: Comodidades;
-
   esportes?: string[];
   valoresPorEsporte?: Record<string, number>;
-
-  funcionamento?: any; // manter compatível
+  funcionamento?: any;
 };
 
 type FormState = {
   nome: string;
   cidade: string;
   endereco: string;
+  numero: string;
   observacoes: string;
   ativo: boolean;
 };
 
-// ---------- Funcionamento UI (MVP bonito) ----------
 type DiaKey = "seg" | "ter" | "qua" | "qui" | "sex" | "sab" | "dom";
 const DIAS: { key: DiaKey; label: string }[] = [
   { key: "seg", label: "Segunda" },
@@ -81,8 +81,8 @@ const DIAS: { key: DiaKey; label: string }[] = [
 
 type DiaUI = {
   fechado: boolean;
-  abre: string; // "08:00"
-  fecha: string; // "22:00"
+  abre: string;
+  fecha: string;
 };
 
 type FuncUI = {
@@ -108,24 +108,19 @@ function defaultFuncUI(): FuncUI {
   };
 }
 
-// Tenta entender formatos antigos/soltos e traduzir pra UI
 function toFuncUI(raw: any): FuncUI {
   const ui = defaultFuncUI();
-
   if (!raw || typeof raw !== "object") return ui;
 
-  // Caso "padrao" já exista
   if (raw.padrao && typeof raw.padrao === "object") {
     if (typeof raw.padrao.abre === "string") ui.padrao.abre = raw.padrao.abre;
     if (typeof raw.padrao.fecha === "string") ui.padrao.fecha = raw.padrao.fecha;
   }
 
-  // Caso tenha "mesmoHorarioTodosOsDias"
   if (typeof raw.mesmoHorarioTodosOsDias === "boolean") {
     ui.mesmoHorarioTodosOsDias = raw.mesmoHorarioTodosOsDias;
   }
 
-  // Caso tenha dias no formato { seg: { fechado, abre, fecha }, ... }
   for (const d of DIAS) {
     const v = raw[d.key];
     if (v && typeof v === "object") {
@@ -135,7 +130,6 @@ function toFuncUI(raw: any): FuncUI {
     }
   }
 
-  // Se tiver "dias" dentro
   if (raw.dias && typeof raw.dias === "object") {
     for (const d of DIAS) {
       const v = raw.dias[d.key];
@@ -147,13 +141,9 @@ function toFuncUI(raw: any): FuncUI {
     }
   }
 
-  // Se não veio nada de dias, mas veio só padrao, mantém todos os dias com padrao e modo "todos os dias"
-  // (fica ok)
-
   return ui;
 }
 
-// Converte UI para objeto salvo no Firestore (padrao + dias)
 function fromFuncUI(ui: FuncUI) {
   const out: any = {
     mesmoHorarioTodosOsDias: ui.mesmoHorarioTodosOsDias,
@@ -180,7 +170,6 @@ function isTimeValid(t: string) {
   return typeof t === "string" && /^\d{2}:\d{2}$/.test(t);
 }
 
-// ✅ Mesmo padrão do NovaQuadra: progresso + watchdog + timeout + cancel
 async function uploadFotoSuperSeguro(quadraId: string, file: File, timeoutMs = 45000) {
   const safeName = file.name.replace(/[^\w.\-]+/g, "_");
   const caminho = `quadras/${quadraId}/capa-${Date.now()}-${safeName}`;
@@ -190,24 +179,6 @@ async function uploadFotoSuperSeguro(quadraId: string, file: File, timeoutMs = 4
 
   const task = uploadBytesResumable(storageRef, file);
 
-  // watchdog: se ficar 8s sem progresso, cancela
-  let lastBytes = 0;
-  let lastChangeAt = Date.now();
-  const watchdog = setInterval(() => {
-    const bytes = task.snapshot.bytesTransferred ?? 0;
-    if (bytes !== lastBytes) {
-      lastBytes = bytes;
-      lastChangeAt = Date.now();
-    } else {
-      if (Date.now() - lastChangeAt > 8000) {
-        console.log("[UPLOAD] STALL detected -> cancel");
-        try {
-          task.cancel();
-        } catch {}
-      }
-    }
-  }, 1000);
-
   const uploadPromise = new Promise<{ url: string; caminho: string }>((resolve, reject) => {
     task.on(
       "state_changed",
@@ -215,12 +186,10 @@ async function uploadFotoSuperSeguro(quadraId: string, file: File, timeoutMs = 4
         console.log("[UPLOAD] progress", snap.bytesTransferred, "/", snap.totalBytes);
       },
       (error) => {
-        clearInterval(watchdog);
         console.log("[UPLOAD] error", error);
         reject(error);
       },
       async () => {
-        clearInterval(watchdog);
         console.log("[UPLOAD] complete");
         try {
           const url = await getDownloadURL(task.snapshot.ref);
@@ -239,8 +208,7 @@ async function uploadFotoSuperSeguro(quadraId: string, file: File, timeoutMs = 4
       try {
         task.cancel();
       } catch {}
-      clearInterval(watchdog);
-      reject(new Error("Upload da foto demorou demais e foi cancelado. Tente uma imagem menor."));
+      reject(new Error("Upload da foto demorou demais e foi cancelado. Tente novamente."));
     }, timeoutMs);
 
     uploadPromise.finally(() => clearTimeout(t));
@@ -248,6 +216,249 @@ async function uploadFotoSuperSeguro(quadraId: string, file: File, timeoutMs = 4
 
   return Promise.race([uploadPromise, timeoutPromise]);
 }
+
+const styles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: "100vh",
+    background:
+      "linear-gradient(180deg, #0f172a 0px, #111827 190px, #f8fafc 190px, #f8fafc 100%)",
+  },
+  container: {
+    maxWidth: 1180,
+    margin: "0 auto",
+    padding: "18px 16px 40px",
+  },
+  hero: {
+    background: "linear-gradient(135deg, #111827, #1e293b)",
+    color: "#fff",
+    borderRadius: 24,
+    padding: "26px 24px",
+    boxShadow: "0 18px 45px rgba(15,23,42,0.20)",
+    marginTop: 12,
+  },
+  heroBadge: {
+    display: "inline-flex",
+    padding: "8px 12px",
+    borderRadius: 999,
+    background: "rgba(255,255,255,0.10)",
+    fontWeight: 800,
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  heroTitle: {
+    margin: 0,
+    fontSize: 36,
+    lineHeight: 1.08,
+    fontWeight: 900,
+  },
+  heroText: {
+    marginTop: 12,
+    marginBottom: 0,
+    color: "#cbd5e1",
+    fontSize: 15,
+    lineHeight: 1.6,
+    maxWidth: 760,
+  },
+  heroActions: {
+    marginTop: 18,
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+  },
+  neutralBtn: {
+    minHeight: 44,
+    padding: "0 16px",
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    background: "#fff",
+    color: "#0f172a",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  darkGhostBtn: {
+    minHeight: 44,
+    padding: "0 16px",
+    borderRadius: 14,
+    border: "1px solid rgba(255,255,255,0.18)",
+    background: "rgba(255,255,255,0.08)",
+    color: "#fff",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  greenBtn: {
+    minHeight: 46,
+    padding: "0 16px",
+    borderRadius: 14,
+    border: "none",
+    background: "linear-gradient(135deg, #10b981, #059669)",
+    color: "#fff",
+    fontWeight: 800,
+    cursor: "pointer",
+    boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
+  },
+  card: {
+    background: "#fff",
+    borderRadius: 22,
+    padding: 18,
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 10px 28px rgba(15,23,42,0.06)",
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: 24,
+    color: "#0f172a",
+    fontWeight: 900,
+  },
+  sectionText: {
+    margin: "8px 0 0",
+    color: "#64748b",
+    fontSize: 14,
+    lineHeight: 1.6,
+  },
+  layout: {
+    marginTop: 18,
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+    gap: 18,
+    alignItems: "start",
+  },
+  stack: {
+    display: "grid",
+    gap: 18,
+  },
+  field: {
+    display: "grid",
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    color: "#475569",
+    fontWeight: 700,
+  },
+  input: {
+    minHeight: 46,
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    padding: "0 14px",
+    background: "#fff",
+    color: "#0f172a",
+    fontSize: 15,
+    width: "100%",
+    boxSizing: "border-box",
+  },
+  textarea: {
+    minHeight: 110,
+    borderRadius: 14,
+    border: "1px solid #cbd5e1",
+    padding: "12px 14px",
+    background: "#fff",
+    color: "#0f172a",
+    fontSize: 15,
+    width: "100%",
+    boxSizing: "border-box",
+    resize: "vertical",
+  },
+  sectionBox: {
+    border: "1px solid #e2e8f0",
+    background: "#f8fafc",
+    borderRadius: 18,
+    padding: 16,
+  },
+  sectionBoxTitle: {
+    margin: 0,
+    color: "#0f172a",
+    fontSize: 18,
+    fontWeight: 900,
+  },
+  helper: {
+    margin: "6px 0 0",
+    color: "#64748b",
+    fontSize: 13,
+    lineHeight: 1.5,
+  },
+  chipWrap: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    marginTop: 12,
+  },
+  chip: {
+    display: "inline-flex",
+    gap: 8,
+    alignItems: "center",
+    padding: "10px 12px",
+    borderRadius: 999,
+    background: "#fff",
+    border: "1px solid #e2e8f0",
+    color: "#334155",
+    fontWeight: 700,
+    cursor: "pointer",
+  },
+  dayRow: {
+    border: "1px solid #e2e8f0",
+    borderRadius: 14,
+    padding: 12,
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 10,
+    flexWrap: "wrap",
+    alignItems: "center",
+    background: "#fff",
+  },
+  dayTitle: {
+    minWidth: 120,
+    fontWeight: 800,
+    color: "#0f172a",
+  },
+  previewImg: {
+    marginTop: 12,
+    width: "100%",
+    maxHeight: 260,
+    objectFit: "cover",
+    borderRadius: 16,
+    display: "block",
+    border: "1px solid #e2e8f0",
+  },
+  summaryBox: {
+    display: "grid",
+    gap: 12,
+  },
+  summaryRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+    flexWrap: "wrap",
+    padding: "12px 14px",
+    borderRadius: 14,
+    background: "#f8fafc",
+    border: "1px solid #e2e8f0",
+  },
+  summaryKey: {
+    color: "#64748b",
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  summaryValue: {
+    color: "#0f172a",
+    fontSize: 14,
+    fontWeight: 900,
+  },
+  statusBox: {
+    marginTop: 14,
+    minHeight: 22,
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  permissionBox: {
+    border: "1px solid #fecaca",
+    background: "#fff5f5",
+    padding: 14,
+    borderRadius: 16,
+    color: "#b91c1c",
+    fontWeight: 800,
+  },
+};
 
 export default function EditarQuadra() {
   const { id } = useParams();
@@ -263,22 +474,34 @@ export default function EditarQuadra() {
     nome: "",
     cidade: "",
     endereco: "",
+    numero: "",
     observacoes: "",
     ativo: true,
   });
 
   const [comodidades, setComodidades] = useState<Comodidades>(comodidadesPadrao);
-
-  // Esportes + valores
   const [esportes, setEsportes] = useState<EsporteId[]>([]);
   const [valoresPorEsporte, setValoresPorEsporte] = useState<Record<string, string>>({});
-
-  // Funcionamento UI
   const [funcUI, setFuncUI] = useState<FuncUI>(defaultFuncUI());
 
   const esportesSelecionadosOrdenados = useMemo(() => {
     return ESPORTES_OPCOES.filter((e) => esportes.includes(e.id)).map((e) => e.id);
   }, [esportes]);
+
+  const [salvando, setSalvando] = useState(false);
+  const [fotoNova, setFotoNova] = useState<File | null>(null);
+  const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
+
+  const semPermissao = useMemo(() => {
+    if (!user || !quadra) return false;
+    return String(quadra.ownerId ?? "") !== String(user.uid ?? "");
+  }, [user, quadra]);
+
+  function toggleComodidade(chave: keyof Comodidades) {
+    setMsg(null);
+    setErro(null);
+    setComodidades((prev) => ({ ...prev, [chave]: !prev[chave] }));
+  }
 
   function toggleEsporte(id: EsporteId) {
     setMsg(null);
@@ -308,23 +531,6 @@ export default function EditarQuadra() {
     setValoresPorEsporte((prev) => ({ ...prev, [esporteId]: valor }));
   }
 
-  const [salvando, setSalvando] = useState(false);
-
-  // Foto
-  const [fotoNova, setFotoNova] = useState<File | null>(null);
-  const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
-
-  const semPermissao = useMemo(() => {
-    if (!user || !quadra) return false;
-    return quadra.ownerId !== user.uid;
-  }, [user, quadra]);
-
-  function toggleComodidade(chave: keyof Comodidades) {
-    setMsg(null);
-    setErro(null);
-    setComodidades((prev) => ({ ...prev, [chave]: !prev[chave] }));
-  }
-
   useEffect(() => {
     async function carregar() {
       try {
@@ -349,10 +555,11 @@ export default function EditarQuadra() {
 
         const q: Quadra = {
           id: snap.id,
-          ownerId: data.ownerId,
+          ownerId: String(data.ownerId ?? ""),
           nome: data.nome,
           cidade: data.cidade,
           endereco: data.endereco,
+          numero: data.numero ?? "",
           observacoes: data.observacoes,
           fotoCapaUrl: data.fotoCapaUrl ?? null,
           fotoCapaPath: data.fotoCapaPath ?? null,
@@ -369,6 +576,7 @@ export default function EditarQuadra() {
           nome: q.nome ?? "",
           cidade: q.cidade ?? "",
           endereco: q.endereco ?? "",
+          numero: q.numero ?? "",
           observacoes: q.observacoes ?? "",
           ativo: q.ativo !== false,
         });
@@ -387,10 +595,8 @@ export default function EditarQuadra() {
         }
         setValoresPorEsporte(mapa);
 
-        // funcionamento -> UI
         setFuncUI(toFuncUI(q.funcionamento));
 
-        // limpa foto
         setFotoNova(null);
         if (fotoPreviewUrl) URL.revokeObjectURL(fotoPreviewUrl);
         setFotoPreviewUrl(null);
@@ -420,7 +626,9 @@ export default function EditarQuadra() {
       if (!id) return setErro("ID da quadra não informado.");
       if (!user) return setErro("Você precisa estar logado.");
       if (!quadra) return setErro("Quadra não carregada.");
-      if (quadra.ownerId !== user.uid) return setErro("Você não tem permissão para editar esta quadra.");
+      if (String(quadra.ownerId) !== String(user.uid)) {
+        return setErro("Você não tem permissão para editar esta quadra.");
+      }
 
       if (!form.nome.trim()) return setErro("Informe o nome da quadra.");
       if (!form.cidade.trim()) return setErro("Informe a cidade.");
@@ -437,10 +645,10 @@ export default function EditarQuadra() {
         valoresConvertidos[esp] = valNum;
       }
 
-      // valida funcionamento UI
       if (!isTimeValid(funcUI.padrao.abre) || !isTimeValid(funcUI.padrao.fecha)) {
         return setErro("Funcionamento: horário padrão inválido.");
       }
+
       if (!funcUI.mesmoHorarioTodosOsDias) {
         for (const d of DIAS) {
           const dia = funcUI.dias[d.key];
@@ -475,6 +683,7 @@ export default function EditarQuadra() {
         nome: form.nome.trim(),
         cidade: form.cidade.trim(),
         endereco: form.endereco.trim(),
+        numero: form.numero.trim(),
         observacoes: form.observacoes.trim(),
         ativo: form.ativo,
         fotoCapaUrl,
@@ -492,6 +701,7 @@ export default function EditarQuadra() {
               nome: form.nome.trim(),
               cidade: form.cidade.trim(),
               endereco: form.endereco.trim(),
+              numero: form.numero.trim(),
               observacoes: form.observacoes.trim(),
               ativo: form.ativo,
               fotoCapaUrl,
@@ -517,6 +727,17 @@ export default function EditarQuadra() {
     }
   }
 
+  const comodidadesAtivas = Object.entries(comodidades)
+    .filter(([, ativo]) => ativo)
+    .map(([k]) => {
+      if (k === "chuveiro") return "Chuveiro";
+      if (k === "churrasqueira") return "Churrasqueira";
+      if (k === "mesaSinuca") return "Mesa de sinuca";
+      if (k === "iluminacao") return "Iluminação";
+      if (k === "coletes") return "Coletes";
+      return k;
+    });
+
   if (loading) return <p>Carregando usuário...</p>;
   if (!user) return <p>Você precisa estar logado.</p>;
 
@@ -524,421 +745,614 @@ export default function EditarQuadra() {
     <>
       <Header />
 
-      <div style={{ padding: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <h1 style={{ margin: 0 }}>Editar Quadra</h1>
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={styles.hero}>
+            <div style={styles.heroBadge}>Gestão da quadra</div>
+            <h1 style={styles.heroTitle}>Editar quadra</h1>
+            <p style={styles.heroText}>
+              Atualize foto, esportes, comodidades, funcionamento e informações do espaço
+              para manter sua quadra sempre pronta para reservas.
+            </p>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link to="/dono">
-              <button>Voltar</button>
-            </Link>
-
-            {id && (
-              <Link to={`/dono/quadra/${id}/reservas`}>
-                <button>Ver reservas</button>
+            <div style={styles.heroActions}>
+              <Link to="/dono" style={{ textDecoration: "none" }}>
+                <button style={styles.darkGhostBtn}>Voltar ao painel</button>
               </Link>
-            )}
+
+              {id ? (
+                <Link to={`/dono/quadra/${id}/reservas`} style={{ textDecoration: "none" }}>
+                  <button style={styles.darkGhostBtn}>Ver reservas</button>
+                </Link>
+              ) : null}
+            </div>
           </div>
-        </div>
 
-        <hr style={{ margin: "16px 0" }} />
+          {carregando ? (
+            <div style={{ ...styles.card, marginTop: 18 }}>
+              <p style={{ margin: 0, color: "#64748b", fontWeight: 700 }}>Carregando quadra...</p>
+            </div>
+          ) : null}
 
-        {carregando && <p>Carregando quadra...</p>}
+          {!carregando && erro && !quadra ? (
+            <div style={{ ...styles.card, marginTop: 18 }}>
+              <p style={{ margin: 0, color: "#b91c1c", fontWeight: 800 }}>{erro}</p>
+            </div>
+          ) : null}
 
-        {!carregando && !erro && quadra && (
-          <>
-            {semPermissao ? (
-              <div style={{ border: "1px solid #f2c2c2", background: "#fff5f5", padding: 12, borderRadius: 12 }}>
-                <p style={{ margin: 0, color: "#a00" }}>Você não tem permissão para editar esta quadra.</p>
-              </div>
-            ) : (
-              <div style={{ display: "grid", gap: 14 }}>
-                {quadra.fotoCapaUrl ? (
-                  <img
-                    src={quadra.fotoCapaUrl}
-                    alt="Foto de capa"
-                    style={{ width: "100%", maxWidth: 520, borderRadius: 12, border: "1px solid #ddd" }}
-                  />
-                ) : (
-                  <div style={{ border: "1px dashed #ccc", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                    <p style={{ margin: 0 }}>Sem foto de capa.</p>
-                  </div>
-                )}
-
-                {/* Foto */}
-                <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                  <strong>Trocar foto de capa</strong>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setMsg(null);
-                      setErro(null);
-
-                      setFotoNova(file);
-
-                      if (fotoPreviewUrl) URL.revokeObjectURL(fotoPreviewUrl);
-
-                      if (file) {
-                        const preview = URL.createObjectURL(file);
-                        setFotoPreviewUrl(preview);
-                      } else {
-                        setFotoPreviewUrl(null);
-                      }
-                    }}
-                    style={{ display: "block", marginTop: 8 }}
-                  />
-
-                  {fotoNova && (
-                    <p style={{ marginTop: 8, fontSize: 14 }}>
-                      Selecionada: <strong>{fotoNova.name}</strong>
-                    </p>
-                  )}
-
-                  {fotoPreviewUrl && (
-                    <img
-                      src={fotoPreviewUrl}
-                      alt="Preview da nova capa"
-                      style={{
-                        marginTop: 10,
-                        width: "100%",
-                        maxHeight: 220,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        border: "1px solid #ddd",
-                      }}
-                    />
-                  )}
-
-                  <p style={{ marginTop: 10, fontSize: 12, color: "#666" }}>Dica: imagens até 1MB ficam bem mais rápidas.</p>
-                </div>
-
-                {/* Esportes */}
-                <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                  <strong>Esportes</strong>
-                  <p style={{ margin: "6px 0 10px", fontSize: 12, color: "#666" }}>
-                    Marque os esportes disponíveis e preencha o valor (R$/hora) de cada um.
-                  </p>
-
-                  <div style={{ display: "grid", gap: 6 }}>
-                    {ESPORTES_OPCOES.map((op) => (
-                      <label key={op.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <input type="checkbox" checked={esportes.includes(op.id)} onChange={() => toggleEsporte(op.id)} />
-                        {op.label}
-                      </label>
-                    ))}
-                  </div>
-
-                  <div style={{ marginTop: 12, borderTop: "1px dashed #ddd", paddingTop: 12 }}>
-                    <strong style={{ fontSize: 14 }}>Valores por esporte</strong>
-
-                    {esportesSelecionadosOrdenados.length === 0 ? (
-                      <p style={{ color: "#666", marginTop: 8 }}>Marque pelo menos 1 esporte acima.</p>
-                    ) : (
-                      <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                        {esportesSelecionadosOrdenados.map((espId) => {
-                          const label = ESPORTES_OPCOES.find((e) => e.id === espId)?.label ?? espId;
-                          return (
-                            <div key={espId} style={{ display: "grid", gap: 4 }}>
-                              <label style={{ fontWeight: 600 }}>{label}</label>
-                              <input
-                                placeholder="Ex: 120"
-                                value={valoresPorEsporte[espId] ?? ""}
-                                onChange={(e) => setValorDoEsporte(espId, e.target.value)}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+          {!carregando && !erro && quadra ? (
+            <>
+              {semPermissao ? (
+                <div style={{ ...styles.card, marginTop: 18 }}>
+                  <div style={styles.permissionBox}>
+                    Você não tem permissão para editar esta quadra.
                   </div>
                 </div>
+              ) : (
+                <div
+                  style={{
+                    ...styles.layout,
+                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                  }}
+                >
+                  <div style={styles.stack}>
+                    <div style={styles.card}>
+                      <h2 style={styles.sectionTitle}>Informações principais</h2>
+                      <p style={styles.sectionText}>
+                        Atualize os dados principais que aparecem no anúncio da quadra.
+                      </p>
 
-                {/* Comodidades */}
-                <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                  <strong>Comodidades</strong>
+                      <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
+                        <label style={styles.field}>
+                          <span style={styles.label}>Nome da quadra</span>
+                          <input
+                            value={form.nome}
+                            onChange={(e) => {
+                              setMsg(null);
+                              setErro(null);
+                              setForm((p) => ({ ...p, nome: e.target.value }));
+                            }}
+                            placeholder="Nome da quadra"
+                            style={styles.input}
+                          />
+                        </label>
 
-                  <label style={{ display: "block", marginTop: 8 }}>
-                    <input type="checkbox" checked={comodidades.chuveiro} onChange={() => toggleComodidade("chuveiro")} />{" "}
-                    Chuveiro
-                  </label>
+                        <label style={styles.field}>
+                          <span style={styles.label}>Cidade</span>
+                          <input
+                            value={form.cidade}
+                            onChange={(e) => {
+                              setMsg(null);
+                              setErro(null);
+                              setForm((p) => ({ ...p, cidade: e.target.value }));
+                            }}
+                            placeholder="Cidade"
+                            style={styles.input}
+                          />
+                        </label>
 
-                  <label style={{ display: "block" }}>
-                    <input
-                      type="checkbox"
-                      checked={comodidades.churrasqueira}
-                      onChange={() => toggleComodidade("churrasqueira")}
-                    />{" "}
-                    Churrasqueira
-                  </label>
-
-                  <label style={{ display: "block" }}>
-                    <input
-                      type="checkbox"
-                      checked={comodidades.mesaSinuca}
-                      onChange={() => toggleComodidade("mesaSinuca")}
-                    />{" "}
-                    Mesa de sinuca
-                  </label>
-
-                  <label style={{ display: "block" }}>
-                    <input
-                      type="checkbox"
-                      checked={comodidades.iluminacao}
-                      onChange={() => toggleComodidade("iluminacao")}
-                    />{" "}
-                    Iluminação
-                  </label>
-
-                  <label style={{ display: "block" }}>
-                    <input type="checkbox" checked={comodidades.coletes} onChange={() => toggleComodidade("coletes")} />{" "}
-                    Coletes
-                  </label>
-                </div>
-
-                {/* ✅ Funcionamento UI */}
-                <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                  <strong>Funcionamento</strong>
-                  <p style={{ margin: "6px 0 10px", fontSize: 12, color: "#666" }}>
-                    Configure o horário padrão ou por dia. Isso será usado para gerar horários.
-                  </p>
-
-                  <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={funcUI.mesmoHorarioTodosOsDias}
-                      onChange={(e) => {
-                        setMsg(null);
-                        setErro(null);
-                        const v = e.target.checked;
-                        setFuncUI((p) => ({ ...p, mesmoHorarioTodosOsDias: v }));
-                      }}
-                    />
-                    <span>Mesmo horário todos os dias</span>
-                  </label>
-
-                  <div style={{ marginTop: 10, borderTop: "1px dashed #ddd", paddingTop: 10 }}>
-                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                      <div style={{ display: "grid", gap: 6 }}>
-                        <span style={{ fontSize: 12, color: "#666" }}>Abre</span>
-                        <input
-                          type="time"
-                          value={funcUI.padrao.abre}
-                          onChange={(e) => {
-                            setMsg(null);
-                            setErro(null);
-                            const v = e.target.value;
-                            setFuncUI((p) => ({ ...p, padrao: { ...p.padrao, abre: v } }));
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "minmax(220px, 1fr) 140px",
+                            gap: 10,
                           }}
-                        />
-                      </div>
+                        >
+                          <label style={styles.field}>
+                            <span style={styles.label}>Endereço (Rua)</span>
+                            <input
+                              value={form.endereco}
+                              onChange={(e) => {
+                                setMsg(null);
+                                setErro(null);
+                                setForm((p) => ({ ...p, endereco: e.target.value }));
+                              }}
+                              placeholder="Rua / Logradouro"
+                              style={styles.input}
+                            />
+                          </label>
 
-                      <div style={{ display: "grid", gap: 6 }}>
-                        <span style={{ fontSize: 12, color: "#666" }}>Fecha</span>
-                        <input
-                          type="time"
-                          value={funcUI.padrao.fecha}
-                          onChange={(e) => {
-                            setMsg(null);
-                            setErro(null);
-                            const v = e.target.value;
-                            setFuncUI((p) => ({ ...p, padrao: { ...p.padrao, fecha: v } }));
+                          <label style={styles.field}>
+                            <span style={styles.label}>Número</span>
+                            <input
+                              value={form.numero}
+                              onChange={(e) => {
+                                setMsg(null);
+                                setErro(null);
+                                setForm((p) => ({ ...p, numero: e.target.value }));
+                              }}
+                              placeholder="Ex: 123"
+                              style={styles.input}
+                            />
+                          </label>
+                        </div>
+
+                        <label style={styles.field}>
+                          <span style={styles.label}>Observações</span>
+                          <textarea
+                            value={form.observacoes}
+                            onChange={(e) => {
+                              setMsg(null);
+                              setErro(null);
+                              setForm((p) => ({ ...p, observacoes: e.target.value }));
+                            }}
+                            rows={4}
+                            placeholder="Observações"
+                            style={styles.textarea}
+                          />
+                        </label>
+
+                        <label
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "center",
+                            fontWeight: 700,
+                            color: "#334155",
                           }}
-                        />
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.ativo}
+                            onChange={(e) => {
+                              setMsg(null);
+                              setErro(null);
+                              setForm((p) => ({ ...p, ativo: e.target.checked }));
+                            }}
+                          />
+                          Quadra ativa
+                        </label>
                       </div>
                     </div>
 
-                    {!funcUI.mesmoHorarioTodosOsDias && (
-                      <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                        {DIAS.map((d) => {
-                          const dia = funcUI.dias[d.key];
-                          return (
-                            <div
-                              key={d.key}
-                              style={{
-                                border: "1px solid #eee",
-                                borderRadius: 10,
-                                padding: 10,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 10,
-                                flexWrap: "wrap",
-                                alignItems: "center",
-                              }}
-                            >
-                              <div style={{ minWidth: 120, fontWeight: 700 }}>{d.label}</div>
+                    <div style={styles.card}>
+                      <h2 style={styles.sectionTitle}>Esportes e valores</h2>
+                      <p style={styles.sectionText}>
+                        Defina os esportes disponíveis e o valor cobrado por hora em cada um.
+                      </p>
 
-                              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <div style={styles.sectionBox}>
+                        <h3 style={styles.sectionBoxTitle}>Esportes</h3>
+                        <p style={styles.helper}>Marque os esportes disponíveis nesta quadra.</p>
+
+                        <div style={styles.chipWrap}>
+                          {ESPORTES_OPCOES.map((op) => {
+                            const ativo = esportes.includes(op.id);
+                            return (
+                              <label
+                                key={op.id}
+                                style={{
+                                  ...styles.chip,
+                                  background: ativo ? "#dbeafe" : "#fff",
+                                  border: ativo ? "1px solid #93c5fd" : "1px solid #e2e8f0",
+                                  color: ativo ? "#1d4ed8" : "#334155",
+                                }}
+                              >
                                 <input
                                   type="checkbox"
-                                  checked={dia.fechado}
-                                  onChange={(e) => {
-                                    setMsg(null);
-                                    setErro(null);
-                                    const fechado = e.target.checked;
-                                    setFuncUI((p) => ({
-                                      ...p,
-                                      dias: { ...p.dias, [d.key]: { ...p.dias[d.key], fechado } },
-                                    }));
-                                  }}
+                                  checked={ativo}
+                                  onChange={() => toggleEsporte(op.id)}
                                 />
-                                <span>Fechado</span>
+                                {op.label}
                               </label>
-
-                              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                                <div style={{ display: "grid", gap: 6 }}>
-                                  <span style={{ fontSize: 12, color: "#666" }}>Abre</span>
-                                  <input
-                                    type="time"
-                                    value={dia.abre}
-                                    disabled={dia.fechado}
-                                    onChange={(e) => {
-                                      setMsg(null);
-                                      setErro(null);
-                                      const abre = e.target.value;
-                                      setFuncUI((p) => ({
-                                        ...p,
-                                        dias: { ...p.dias, [d.key]: { ...p.dias[d.key], abre } },
-                                      }));
-                                    }}
-                                  />
-                                </div>
-
-                                <div style={{ display: "grid", gap: 6 }}>
-                                  <span style={{ fontSize: 12, color: "#666" }}>Fecha</span>
-                                  <input
-                                    type="time"
-                                    value={dia.fecha}
-                                    disabled={dia.fechado}
-                                    onChange={(e) => {
-                                      setMsg(null);
-                                      setErro(null);
-                                      const fecha = e.target.value;
-                                      setFuncUI((p) => ({
-                                        ...p,
-                                        dias: { ...p.dias, [d.key]: { ...p.dias[d.key], fecha } },
-                                      }));
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Dados básicos + salvar */}
-                <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12, maxWidth: 520 }}>
-                  <p style={{ marginTop: 0, color: "#666" }}>
-                    Editar dados básicos (nome/cidade/endereço/observações/status).
-                  </p>
+                      <div style={{ ...styles.sectionBox, marginTop: 14 }}>
+                        <h3 style={styles.sectionBoxTitle}>Valores por esporte (R$/hora)</h3>
+                        <p style={styles.helper}>
+                          Para cada esporte marcado, informe o valor correspondente.
+                        </p>
 
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <label style={{ display: "grid", gap: 6 }}>
-                      <span>Nome</span>
-                      <input
-                        value={form.nome}
-                        onChange={(e) => {
-                          setMsg(null);
-                          setErro(null);
-                          setForm((p) => ({ ...p, nome: e.target.value }));
-                        }}
-                        placeholder="Nome da quadra"
-                      />
-                    </label>
-
-                    <label style={{ display: "grid", gap: 6 }}>
-                      <span>Cidade</span>
-                      <input
-                        value={form.cidade}
-                        onChange={(e) => {
-                          setMsg(null);
-                          setErro(null);
-                          setForm((p) => ({ ...p, cidade: e.target.value }));
-                        }}
-                        placeholder="Cidade"
-                      />
-                    </label>
-
-                    <label style={{ display: "grid", gap: 6 }}>
-                      <span>Endereço</span>
-                      <input
-                        value={form.endereco}
-                        onChange={(e) => {
-                          setMsg(null);
-                          setErro(null);
-                          setForm((p) => ({ ...p, endereco: e.target.value }));
-                        }}
-                        placeholder="Endereço"
-                      />
-                    </label>
-
-                    <label style={{ display: "grid", gap: 6 }}>
-                      <span>Observações</span>
-                      <textarea
-                        value={form.observacoes}
-                        onChange={(e) => {
-                          setMsg(null);
-                          setErro(null);
-                          setForm((p) => ({ ...p, observacoes: e.target.value }));
-                        }}
-                        rows={4}
-                        placeholder="Observações"
-                      />
-                    </label>
-
-                    <label style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                      <input
-                        type="checkbox"
-                        checked={form.ativo}
-                        onChange={(e) => {
-                          setMsg(null);
-                          setErro(null);
-                          setForm((p) => ({ ...p, ativo: e.target.checked }));
-                        }}
-                      />
-                      <span>Quadra ativa</span>
-                    </label>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 12,
-                        flexWrap: "wrap",
-                        marginTop: 6,
-                        paddingTop: 10,
-                        borderTop: "1px dashed #ddd",
-                      }}
-                    >
-                      <div style={{ minHeight: 18, fontSize: 13 }}>
-                        {erro ? (
-                          <span style={{ color: "crimson" }}>{erro}</span>
-                        ) : msg ? (
-                          <span style={{ color: "green" }}>{msg}</span>
+                        {esportesSelecionadosOrdenados.length === 0 ? (
+                          <div
+                            style={{
+                              marginTop: 12,
+                              padding: "14px",
+                              borderRadius: 14,
+                              background: "#fff",
+                              border: "1px dashed #cbd5e1",
+                              color: "#64748b",
+                              fontWeight: 600,
+                            }}
+                          >
+                            Marque pelo menos 1 esporte acima.
+                          </div>
                         ) : (
-                          <span style={{ color: "#666" }}>—</span>
+                          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+                            {esportesSelecionadosOrdenados.map((espId) => {
+                              const label =
+                                ESPORTES_OPCOES.find((e) => e.id === espId)?.label ?? espId;
+                              return (
+                                <label key={espId} style={styles.field}>
+                                  <span style={styles.label}>{label}</span>
+                                  <input
+                                    placeholder="Ex: 120"
+                                    value={valoresPorEsporte[espId] ?? ""}
+                                    onChange={(e) => setValorDoEsporte(espId, e.target.value)}
+                                    style={styles.input}
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={styles.card}>
+                      <h2 style={styles.sectionTitle}>Comodidades e funcionamento</h2>
+                      <p style={styles.sectionText}>
+                        Ajuste a estrutura da quadra e como ela funciona ao longo da semana.
+                      </p>
+
+                      <div style={styles.sectionBox}>
+                        <h3 style={styles.sectionBoxTitle}>Comodidades</h3>
+                        <p style={styles.helper}>Selecione o que a quadra oferece.</p>
+
+                        <div style={styles.chipWrap}>
+                          {[
+                            { key: "chuveiro", label: "Chuveiro" },
+                            { key: "churrasqueira", label: "Churrasqueira" },
+                            { key: "mesaSinuca", label: "Mesa de sinuca" },
+                            { key: "iluminacao", label: "Iluminação" },
+                            { key: "coletes", label: "Coletes" },
+                          ].map((item) => {
+                            const ativo = comodidades[item.key as keyof Comodidades];
+                            return (
+                              <label
+                                key={item.key}
+                                style={{
+                                  ...styles.chip,
+                                  background: ativo ? "#ecfeff" : "#fff",
+                                  border: ativo ? "1px solid #a5f3fc" : "1px solid #e2e8f0",
+                                  color: ativo ? "#155e75" : "#334155",
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={ativo}
+                                  onChange={() => toggleComodidade(item.key as keyof Comodidades)}
+                                />
+                                {item.label}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div style={{ ...styles.sectionBox, marginTop: 14 }}>
+                        <h3 style={styles.sectionBoxTitle}>Funcionamento</h3>
+                        <p style={styles.helper}>
+                          Configure o horário padrão ou personalize por dia.
+                        </p>
+
+                        <label
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "center",
+                            marginTop: 12,
+                            fontWeight: 700,
+                            color: "#334155",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={funcUI.mesmoHorarioTodosOsDias}
+                            onChange={(e) => {
+                              setMsg(null);
+                              setErro(null);
+                              const v = e.target.checked;
+                              setFuncUI((p) => ({ ...p, mesmoHorarioTodosOsDias: v }));
+                            }}
+                          />
+                          Mesmo horário todos os dias
+                        </label>
+
+                        <div
+                          style={{
+                            marginTop: 14,
+                            display: "flex",
+                            gap: 10,
+                            flexWrap: "wrap",
+                            alignItems: "end",
+                          }}
+                        >
+                          <label style={styles.field}>
+                            <span style={styles.label}>Abre</span>
+                            <input
+                              type="time"
+                              value={funcUI.padrao.abre}
+                              onChange={(e) => {
+                                setMsg(null);
+                                setErro(null);
+                                const v = e.target.value;
+                                setFuncUI((p) => ({ ...p, padrao: { ...p.padrao, abre: v } }));
+                              }}
+                              style={styles.input}
+                            />
+                          </label>
+
+                          <label style={styles.field}>
+                            <span style={styles.label}>Fecha</span>
+                            <input
+                              type="time"
+                              value={funcUI.padrao.fecha}
+                              onChange={(e) => {
+                                setMsg(null);
+                                setErro(null);
+                                const v = e.target.value;
+                                setFuncUI((p) => ({ ...p, padrao: { ...p.padrao, fecha: v } }));
+                              }}
+                              style={styles.input}
+                            />
+                          </label>
+                        </div>
+
+                        {!funcUI.mesmoHorarioTodosOsDias ? (
+                          <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
+                            {DIAS.map((d) => {
+                              const dia = funcUI.dias[d.key];
+                              return (
+                                <div key={d.key} style={styles.dayRow}>
+                                  <div style={styles.dayTitle}>{d.label}</div>
+
+                                  <label
+                                    style={{
+                                      display: "flex",
+                                      gap: 8,
+                                      alignItems: "center",
+                                      fontWeight: 700,
+                                      color: "#334155",
+                                    }}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={dia.fechado}
+                                      onChange={(e) => {
+                                        setMsg(null);
+                                        setErro(null);
+                                        const fechado = e.target.checked;
+                                        setFuncUI((p) => ({
+                                          ...p,
+                                          dias: {
+                                            ...p.dias,
+                                            [d.key]: { ...p.dias[d.key], fechado },
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                    Fechado
+                                  </label>
+
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      gap: 10,
+                                      flexWrap: "wrap",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <label style={styles.field}>
+                                      <span style={styles.label}>Abre</span>
+                                      <input
+                                        type="time"
+                                        value={dia.abre}
+                                        disabled={dia.fechado}
+                                        onChange={(e) => {
+                                          setMsg(null);
+                                          setErro(null);
+                                          const abre = e.target.value;
+                                          setFuncUI((p) => ({
+                                            ...p,
+                                            dias: {
+                                              ...p.dias,
+                                              [d.key]: { ...p.dias[d.key], abre },
+                                            },
+                                          }));
+                                        }}
+                                        style={styles.input}
+                                      />
+                                    </label>
+
+                                    <label style={styles.field}>
+                                      <span style={styles.label}>Fecha</span>
+                                      <input
+                                        type="time"
+                                        value={dia.fecha}
+                                        disabled={dia.fechado}
+                                        onChange={(e) => {
+                                          setMsg(null);
+                                          setErro(null);
+                                          const fecha = e.target.value;
+                                          setFuncUI((p) => ({
+                                            ...p,
+                                            dias: {
+                                              ...p.dias,
+                                              [d.key]: { ...p.dias[d.key], fecha },
+                                            },
+                                          }));
+                                        }}
+                                        style={styles.input}
+                                      />
+                                    </label>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <div style={styles.statusBox}>
+                        {erro ? (
+                          <span style={{ color: "#b91c1c" }}>{erro}</span>
+                        ) : msg ? (
+                          <span style={{ color: "#15803d" }}>{msg}</span>
+                        ) : (
+                          <span style={{ color: "#64748b" }}>—</span>
                         )}
                       </div>
 
-                      <button onClick={salvar} disabled={salvando}>
-                        {salvando ? "Salvando..." : "Salvar alterações"}
-                      </button>
+                      <div style={{ marginTop: 10 }}>
+                        <button onClick={salvar} disabled={salvando} style={styles.greenBtn}>
+                          {salvando ? "Salvando..." : "Salvar alterações"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={styles.stack}>
+                    <div style={styles.card}>
+                      <h2 style={styles.sectionTitle}>Foto da quadra</h2>
+                      <p style={styles.sectionText}>
+                        Troque a imagem principal para manter o anúncio atualizado e atrativo.
+                      </p>
+
+                      {quadra.fotoCapaUrl ? (
+                        <img
+                          src={quadra.fotoCapaUrl}
+                          alt="Foto de capa"
+                          style={styles.previewImg}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            marginTop: 14,
+                            border: "1px dashed #cbd5e1",
+                            borderRadius: 16,
+                            padding: 16,
+                            color: "#64748b",
+                            fontWeight: 700,
+                            background: "#f8fafc",
+                          }}
+                        >
+                          Sem foto de capa.
+                        </div>
+                      )}
+
+                      <div style={{ ...styles.sectionBox, marginTop: 14 }}>
+                        <h3 style={styles.sectionBoxTitle}>Trocar foto de capa</h3>
+                        <p style={styles.helper}>
+                          Dica: imagens até 1MB costumam ficar bem mais rápidas.
+                        </p>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setMsg(null);
+                            setErro(null);
+                            setFotoNova(file);
+
+                            if (fotoPreviewUrl) URL.revokeObjectURL(fotoPreviewUrl);
+
+                            if (file) {
+                              const preview = URL.createObjectURL(file);
+                              setFotoPreviewUrl(preview);
+                            } else {
+                              setFotoPreviewUrl(null);
+                            }
+                          }}
+                          style={{ display: "block", marginTop: 12 }}
+                        />
+
+                        {fotoNova ? (
+                          <p style={{ marginTop: 10, fontSize: 14, color: "#334155" }}>
+                            Selecionada: <strong>{fotoNova.name}</strong>
+                          </p>
+                        ) : null}
+
+                        {fotoPreviewUrl ? (
+                          <img
+                            src={fotoPreviewUrl}
+                            alt="Preview da nova capa"
+                            style={styles.previewImg}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+
+                    <div style={styles.card}>
+                      <h2 style={styles.sectionTitle}>Resumo da quadra</h2>
+                      <p style={styles.sectionText}>
+                        Confira rapidamente como a quadra está configurada agora.
+                      </p>
+
+                      <div style={{ ...styles.summaryBox, marginTop: 18 }}>
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Nome</div>
+                          <div style={styles.summaryValue}>{form.nome.trim() || "—"}</div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Cidade</div>
+                          <div style={styles.summaryValue}>{form.cidade.trim() || "—"}</div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Endereço</div>
+                          <div style={styles.summaryValue}>
+                            {[form.endereco.trim(), form.numero.trim()].filter(Boolean).join(", ") || "—"}
+                          </div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Status</div>
+                          <div style={styles.summaryValue}>{form.ativo ? "Ativa" : "Inativa"}</div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Esportes</div>
+                          <div style={styles.summaryValue}>
+                            {esportesSelecionadosOrdenados.length > 0
+                              ? esportesSelecionadosOrdenados
+                                  .map((id) => ESPORTES_OPCOES.find((e) => e.id === id)?.label ?? id)
+                                  .join(", ")
+                              : "—"}
+                          </div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Comodidades</div>
+                          <div style={styles.summaryValue}>
+                            {comodidadesAtivas.length > 0 ? comodidadesAtivas.join(", ") : "—"}
+                          </div>
+                        </div>
+
+                        <div style={styles.summaryRow}>
+                          <div style={styles.summaryKey}>Foto nova</div>
+                          <div style={styles.summaryValue}>{fotoNova ? "Selecionada" : "Sem troca"}</div>
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 4,
+                            padding: 16,
+                            borderRadius: 16,
+                            background: "linear-gradient(180deg, #eff6ff, #ffffff)",
+                            border: "1px solid #bfdbfe",
+                            color: "#1e3a8a",
+                            lineHeight: 1.6,
+                            fontSize: 14,
+                            fontWeight: 600,
+                          }}
+                        >
+                          Depois de salvar, a quadra mantém seus dados atualizados e prontos para
+                          novas reservas dentro do Quadra Play.
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {!carregando && erro && !quadra && <p style={{ color: "crimson" }}>{erro}</p>}
+              )}
+            </>
+          ) : null}
+        </div>
       </div>
     </>
   );

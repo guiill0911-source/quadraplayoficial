@@ -1,0 +1,1 @@
+export const TERMOS_VERSAO_ATUAL = "2026-03-03-v3";

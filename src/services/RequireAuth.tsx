@@ -1,12 +1,20 @@
+// src/services/RequireAuth.tsx
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./authContext";
 
 export default function RequireAuth({ children }: { children: ReactNode }) {
-  const { loading, user } = useAuth();
+  const { user, loading } = useAuth();
+  const loc = useLocation();
 
-  if (loading) return <p style={{ padding: 16 }}>Carregando...</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  // ✅ nunca redireciona enquanto está carregando
+  if (loading) {
+    return <p style={{ padding: 16 }}>Carregando…</p>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  }
 
   return <>{children}</>;
 }

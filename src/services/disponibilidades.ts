@@ -7,6 +7,7 @@ import {
   setDoc,
   where,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -15,10 +16,8 @@ type QuadraDoc = {
   valoresPorEsporte?: Record<string, number>;
   valorHora?: number | null;
 
-  funcionamento?: any;
-
-  // ✅ EXCEÇÕES por data: "YYYY-MM-DD" -> { aberto: boolean, inicio?: "HH:MM", fim?: "HH:MM" }
-  excecoesFuncionamento?: Record<string, any>;
+  funcionamento?: any; // semanal
+  excecoesFuncionamento?: Record<string, any>; // por data YYYY-MM-DD
 };
 
 type SlotGerado = {
@@ -64,10 +63,9 @@ function gerarSlots1hEntre(inicioHHMM: string, fimHHMM: string): SlotGerado[] {
   let ini = ini0;
   let fim = fim0;
 
-  // ✅ 16:00 -> 00:00 (vira o dia)
+  // 16:00 -> 00:00 (vira o dia). MVP: corta em 24:00 do mesmo dia.
   if (fim <= ini) fim = fim + 1440;
 
-  // por enquanto: não passa da meia-noite (mvp)
   const fimEfetivo = Math.min(fim, 1440);
   if (fimEfetivo - ini < 60) return [];
 
@@ -83,35 +81,25 @@ function parseDateYYYYMMDD(data: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
-function weekdayKeyFromData(data: string):
-  | "domingo"
-  | "segunda"
-  | "terca"
-  | "quarta"
-  | "quinta"
-  | "sexta"
-  | "sabado" {
+function weekdayKeyFromData(
+  data: string
+): "domingo" | "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado" {
   const dt = parseDateYYYYMMDD(data);
   const dow = dt.getDay();
   const keys = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"] as const;
   return keys[dow];
 }
 
-// Normaliza qualquer “regra” vinda do Firestore para {aberto,inicio,fim}
-function normalizeRegra(raw: any) {
-  if (!raw || typeof raw !== "object") return null;
-
-  const aberto =
-    typeof raw.aberto === "boolean"
-      ? raw.aberto
-      : typeof raw.fechado === "boolean"
-      ? !raw.fechado
-      : true;
-
-  const inicio = raw.inicio ?? raw.abre ?? raw.horaInicio;
-  const fim = raw.fim ?? raw.fecha ?? raw.horaFim;
-
-  return { aberto, inicio, fim };
+function isDiaDeSemana(
+  key: "domingo" | "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado"
+) {
+  return (
+    key === "segunda" ||
+    key === "terca" ||
+    key === "quarta" ||
+    key === "quinta" ||
+    key === "sexta"
+  );
 }
 
 function getRegraDoDia(funcionamento: any, key: string) {
@@ -135,7 +123,23 @@ function getRegraDoDia(funcionamento: any, key: string) {
   const idx = numberMap[key];
 
   const candidates: any[] = [];
-  for (const v of variants) if (funcionamento[v] != null) candidates.push(funcionamento[v]);
+
+  // ✅ novo modelo agrupado
+  if (isDiaDeSemana(key as any) && funcionamento.semana != null) {
+    candidates.push(funcionamento.semana);
+  }
+  if (key === "sabado" && funcionamento.sabado != null) {
+    candidates.push(funcionamento.sabado);
+  }
+  if (key === "domingo" && funcionamento.domingo != null) {
+    candidates.push(funcionamento.domingo);
+  }
+
+  // ✅ compatibilidade com modelo por dia
+  for (const v of variants) {
+    if (funcionamento[v] != null) candidates.push(funcionamento[v]);
+  }
+
   if (funcionamento[idx] != null) candidates.push(funcionamento[idx]);
   if (funcionamento[String(idx)] != null) candidates.push(funcionamento[String(idx)]);
 
@@ -148,16 +152,77 @@ function getRegraDoDia(funcionamento: any, key: string) {
     sexta: ["sex"],
     sabado: ["sab"],
   };
-  for (const ab of abrevMap[key] ?? []) if (funcionamento[ab] != null) candidates.push(funcionamento[ab]);
 
-  const regraRaw = candidates.find((x) => x && typeof x === "object");
-  return normalizeRegra(regraRaw);
+  for (const ab of abrevMap[key] ?? []) {
+    if (funcionamento[ab] != null) candidates.push(funcionamento[ab]);
+  }
+
+  const regra = candidates.find((x) => x && typeof x === "object");
+  if (!regra) return null;
+
+  const aberto =
+    typeof regra.aberto === "boolean"
+      ? regra.aberto
+      : typeof regra.fechado === "boolean"
+      ? !regra.fechado
+      : true;
+
+  const inicio = regra.inicio ?? regra.abre ?? regra.horaInicio;
+  const fim = regra.fim ?? regra.fecha ?? regra.horaFim;
+
+  return { aberto, inicio, fim };
+}
+
+function normalizeExcecao(raw: any) {
+  if (!raw || typeof raw !== "object") return null;
+  const aberto =
+    typeof raw.aberto === "boolean"
+      ? raw.aberto
+      : typeof raw.fechado === "boolean"
+      ? !raw.fechado
+      : true;
+  const inicio = raw.inicio ?? raw.abre ?? raw.horaInicio;
+  const fim = raw.fim ?? raw.fecha ?? raw.horaFim;
+  return { aberto, inicio, fim };
+}
+
+function buildStartEndAt(data: string, horaInicio: string, horaFim: string) {
+  const [y, m, d] = data.split("-").map((x) => Number(x));
+  const [hIni, minIni] = horaInicio.split(":").map(Number);
+  const [hFim, minFim] = horaFim.split(":").map(Number);
+
+  const startDate = new Date(y, (m ?? 1) - 1, d ?? 1, hIni ?? 0, minIni ?? 0);
+  const endDate = new Date(y, (m ?? 1) - 1, d ?? 1, hFim ?? 0, minFim ?? 0);
+
+  return {
+    startAt: Timestamp.fromDate(startDate),
+    endAt: Timestamp.fromDate(endDate),
+  };
+}
+
+type ExistingDisp = {
+  id: string;
+  data: any;
+};
+
+function makeSlotKey(esporte: string, horaInicio: string, horaFim: string) {
+  return `${esporte}__${horaInicio}__${horaFim}`;
 }
 
 export async function gerarDisponibilidadesParaData(quadraId: string, data: string) {
   const quadraRef = doc(db, "quadras", quadraId);
   const quadraSnap = await getDoc(quadraRef);
   if (!quadraSnap.exists()) throw new Error("Quadra não encontrada.");
+
+  const ownerId = String((quadraSnap.data() as any)?.ownerId ?? "").trim();
+if (!ownerId) throw new Error("Quadra sem ownerId.");
+
+const finSnap = await getDoc(doc(db, "financeiro_donos", ownerId));
+const saldoCentavos = finSnap.exists() ? Number((finSnap.data() as any)?.saldoCentavos ?? 0) : 0;
+
+if (saldoCentavos <= -5000) {
+  throw new Error("Sua quadra está bloqueada temporariamente por saldo pendente com a plataforma.");
+}
 
   const quadra = quadraSnap.data() as QuadraDoc;
 
@@ -167,23 +232,21 @@ export async function gerarDisponibilidadesParaData(quadraId: string, data: stri
   const valoresPorEsporte = quadra.valoresPorEsporte ?? {};
   const valorHoraGeral = typeof quadra.valorHora === "number" ? quadra.valorHora : null;
 
-  // ✅ 1) slots por EXCEÇÃO do dia (se existir)
+  // 1) primeiro: tenta exceção por data
   let slots: SlotGerado[] = [];
-  const excecoes = quadra.excecoesFuncionamento ?? {};
-  const excecaoRaw = excecoes?.[data];
-  const excecao = normalizeRegra(excecaoRaw);
+  const ex = normalizeExcecao(quadra.excecoesFuncionamento?.[data]);
 
-  if (excecao) {
-    if (excecao.aberto === false) {
+  if (ex) {
+    if (ex.aberto === false) {
       return { criados: 0, jaExistia: false, fechado: true, motivo: "excecao" };
     }
 
-    if (typeof excecao.inicio === "string" && typeof excecao.fim === "string") {
-      slots = gerarSlots1hEntre(excecao.inicio, excecao.fim);
+    if (typeof ex.inicio === "string" && typeof ex.fim === "string") {
+      slots = gerarSlots1hEntre(ex.inicio, ex.fim);
     }
   }
 
-  // ✅ 2) se não tiver exceção (ou inválida), usa funcionamento semanal
+  // 2) se não tiver exceção válida, usa funcionamento semanal
   if (slots.length === 0) {
     const funcionamento = quadra.funcionamento;
 
@@ -201,39 +264,73 @@ export async function gerarDisponibilidadesParaData(quadraId: string, data: stri
     }
   }
 
-  // ✅ 3) fallback padrão
+  // 3) fallback padrão
   if (slots.length === 0) slots = gerarSlotsPadrao1h();
 
-  // ✅ checagem de duplicidade (mas ignora se só existirem docs removidos)
   const col = collection(db, "disponibilidades");
   const qCheck = query(col, where("quadraId", "==", quadraId), where("data", "==", data));
   const snapCheck = await getDocs(qCheck);
 
-  if (!snapCheck.empty) {
-    const docs = snapCheck.docs.map((d) => d.data() as any);
-    const existeNaoRemovido = docs.some((x) => x?.removido !== true);
-    if (existeNaoRemovido) {
-      return { criados: 0, jaExistia: true, fechado: false };
+  const existentes: ExistingDisp[] = snapCheck.docs.map((d) => ({
+    id: d.id,
+    data: d.data() as any,
+  }));
+
+  // se já existe slot "editável" ativo, não duplica geração
+  const existeSlotEditavel = existentes.some(
+    (x) => x.data?.removido !== true && !x.data?.reservadoPorUid
+  );
+  if (existeSlotEditavel) {
+    return { criados: 0, jaExistia: true, fechado: false };
+  }
+
+  const existentesPorChave = new Map<string, ExistingDisp>();
+  for (const item of existentes) {
+    const esp = String(item.data?.esporte ?? "");
+    const hi = String(item.data?.horaInicio ?? "");
+    const hf = String(item.data?.horaFim ?? "");
+    if (!esp || !hi || !hf) continue;
+
+    const chave = makeSlotKey(esp, hi, hf);
+
+    // guarda apenas slots removidos e sem reserva, que podem ser reativados
+    if (item.data?.removido === true && !item.data?.reservadoPorUid) {
+      if (!existentesPorChave.has(chave)) {
+        existentesPorChave.set(chave, item);
+      }
     }
-    // se TODOS removidos, deixa gerar de novo
   }
 
   let criados = 0;
 
   for (const esp of esportes) {
-    const valor = typeof valoresPorEsporte[esp] === "number" ? valoresPorEsporte[esp] : valorHoraGeral;
-    if (typeof valor !== "number") throw new Error(`Quadra sem valor definido para o esporte: ${esp}`);
+    const valor =
+      typeof valoresPorEsporte[esp] === "number" ? valoresPorEsporte[esp] : valorHoraGeral;
+
+    if (typeof valor !== "number") {
+      throw new Error(`Quadra sem valor definido para o esporte: ${esp}`);
+    }
 
     for (const s of slots) {
-      const dispRef = doc(col);
+      const { startAt, endAt } = buildStartEndAt(data, s.horaInicio, s.horaFim);
 
-      await setDoc(dispRef, {
+      const payload = {
         quadraId,
         data,
         esporte: esp,
         horaInicio: s.horaInicio,
         horaFim: s.horaFim,
         valor,
+        
+        // 🔥 PROMOÇÃO (novo)
+promocaoAtiva: false,
+valorOriginal: valor,
+valorPromocional: null,
+promocaoCriadaEm: null,
+promocaoCriadaPorUid: null,
+
+        startAt,
+        endAt,
 
         ativo: true,
 
@@ -244,11 +341,19 @@ export async function gerarDisponibilidadesParaData(quadraId: string, data: stri
         bloqueado: false,
         bloqueadoPorUid: null,
 
-        // ✅ SOFT DELETE
         removido: false,
 
         createdAt: serverTimestamp(),
-      });
+      };
+
+      const chave = makeSlotKey(esp, s.horaInicio, s.horaFim);
+      const existenteRemovido = existentesPorChave.get(chave);
+
+      if (existenteRemovido) {
+        await setDoc(doc(db, "disponibilidades", existenteRemovido.id), payload);
+      } else {
+        await setDoc(doc(col), payload);
+      }
 
       criados++;
     }

@@ -1,20 +1,68 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "./authContext";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
+
+type Role = "atleta" | "dono" | "ceo";
 
 type Props = {
-  role: "atleta" | "dono";
-  children: React.ReactNode;
+  role: Role;
+  children: any;
 };
 
+function normalizeRole(value: any): Role | null {
+  if (!value) return null;
+  const v = String(value).trim().toLowerCase();
+
+  if (v === "atleta") return "atleta";
+  if (v === "dono") return "dono";
+  if (v === "ceo") return "ceo";
+
+  return null;
+}
+
 export default function RequireRole({ role, children }: Props) {
-  const { user, loading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [ok, setOk] = useState(false);
 
-  if (loading) return <p>Carregando...</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  useEffect(() => {
+    let alive = true;
 
-  if (user.role !== role) {
-    return <Navigate to="/" replace />;
-  }
+    async function run() {
+      try {
+        const user = auth.currentUser;
 
-  return <>{children}</>;
+        if (!user) {
+          if (alive) {
+            setOk(false);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const rawRole = snap.exists() ? (snap.data() as any).role : null;
+        const userRole = normalizeRole(rawRole);
+
+        if (alive) {
+          setOk(userRole === role);
+          setLoading(false);
+        }
+      } catch {
+        if (alive) {
+          setOk(false);
+          setLoading(false);
+        }
+      }
+    }
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, [role]);
+
+  if (loading) return null;
+  if (!ok) return <Navigate to="/" replace />;
+  return children;
 }

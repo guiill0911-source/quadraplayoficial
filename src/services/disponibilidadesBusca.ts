@@ -15,9 +15,7 @@ export async function buscarQuadrasDisponiveis(filtro: FiltroDisponibilidade) {
   let q = query(
     col,
     where("data", "==", filtro.data),
-    where("ativo", "==", true),
-    where("bloqueado", "==", false),
-    where("removido", "==", false)
+    where("ativo", "==", true)
   );
 
   if (filtro.horaInicio) {
@@ -34,6 +32,11 @@ export async function buscarQuadrasDisponiveis(filtro: FiltroDisponibilidade) {
   const quadraIds = new Set<string>();
   snap.forEach((d) => {
     const x = d.data() as any;
+
+    // filtra no front para aceitar docs que não tenham os campos explícitos
+    if (x?.bloqueado === true) return;
+    if (x?.removido === true) return;
+
     if (x?.quadraId) quadraIds.add(String(x.quadraId));
   });
 
@@ -50,7 +53,9 @@ export type SlotDisponibilidade = {
   horaFim: string; // "HH:MM"
   valor: number;
   ativo: boolean;
-
+  promocaoAtiva?: boolean;
+  valorOriginal?: number | null;
+  valorPromocional?: number | null;
   // novos campos (opcional no tipo, mas na prática virão)
   bloqueado?: boolean;
   removido?: boolean;
@@ -68,11 +73,7 @@ export async function buscarSlotsDisponiveisDaQuadra(params: {
     where("quadraId", "==", params.quadraId),
     where("data", "==", params.data),
     where("esporte", "==", params.esporte),
-
-    // ✅ só o que pode reservar
-    where("ativo", "==", true),
-    where("bloqueado", "==", false),
-    where("removido", "==", false)
+    where("ativo", "==", true)
   );
 
   const snap = await getDocs(q);
@@ -88,14 +89,21 @@ export async function buscarSlotsDisponiveisDaQuadra(params: {
       horaFim: String(x.horaFim ?? ""),
       valor: Number(x.valor ?? 0),
       ativo: Boolean(x.ativo),
+        promocaoAtiva: x.promocaoAtiva === true,
+  valorOriginal: x.valorOriginal != null ? Number(x.valorOriginal) : null,
+  valorPromocional: x.valorPromocional != null ? Number(x.valorPromocional) : null,
 
-      bloqueado: Boolean(x.bloqueado),
-      removido: Boolean(x.removido),
+      bloqueado: x.bloqueado === true,
+      removido: x.removido === true,
     };
   });
 
-  // ordenar por hora
-  slots.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+  const slotsFiltrados = slots.filter(
+    (s) => s.bloqueado !== true && s.removido !== true
+  );
 
-  return slots;
+  // ordenar por hora
+  slotsFiltrados.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+
+  return slotsFiltrados;
 }

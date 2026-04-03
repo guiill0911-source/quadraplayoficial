@@ -1,0 +1,265 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================
+    // HELPERS
+    // =========================
+    function isLoggedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(uid()));
+    }
+
+    function hasUserDoc() {
+      return exists(/databases/$(database)/documents/users/$(uid()));
+    }
+
+    function role() {
+      return hasUserDoc() ? userDoc().data.role : null;
+    }
+
+    function isCeo() { return isLoggedIn() && role() == "ceo"; }
+    function isDono() { return isLoggedIn() && role() == "dono"; }
+    function isAtleta() { return isLoggedIn() && role() == "atleta"; }
+
+    function quadraDoc(quadraId) {
+      return get(/databases/$(database)/documents/quadras/$(quadraId));
+    }
+
+    function isOwnerOfQuadra(quadraId) {
+      return isDono() && quadraDoc(quadraId).data.ownerId == uid();
+    }
+
+    // =========================
+    // SUSPENSÃO / MULTA
+    // =========================
+    function suspensoAte() {
+      return hasUserDoc() ? userDoc().data.suspensoAte : null;
+    }
+
+    function isSuspensoAgora() {
+      return suspensoAte() != null && suspensoAte() > request.time;
+    }
+
+    function multaPendenteCentavos() {
+      return hasUserDoc() ? userDoc().data.multaPendenteCentavos : 0;
+    }
+
+    function semMultaPendente() {
+      return multaPendenteCentavos() == null || multaPendenteCentavos() <= 0;
+    }
+
+    function podeReservar() {
+      return isLoggedIn() && !isSuspensoAgora() && semMultaPendente();
+    }
+
+    // =========================
+    // USERS
+    // =========================
+    match /users/{userId} {
+      allow read: if isLoggedIn();
+
+      allow create: if isLoggedIn()
+        && uid() == userId
+        && request.resource.data.keys().hasOnly([
+          "role",
+          "nome",
+          "sobrenome",
+          "telefone",
+          "telefoneNormalizado",
+          "telefoneVerificado",
+          "fotoUrl",
+          "cpf",
+          "cpfHash",
+          "cpfUltimos4",
+          "cpfConsentidoEm",
+          "cpfVerificadoEm",
+          "email",
+          "emailVerificado",
+          "termosAceitosEm",
+          "versaoTermosAceitos",
+          "createdAt",
+          "updatedAt"
+        ])
+        && (
+          !("role" in request.resource.data) ||
+          request.resource.data.role in ["atleta", "dono"]
+        );
+
+      allow update: if isLoggedIn()
+        && uid() == userId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "nome",
+          "sobrenome",
+          "telefone",
+          "telefoneNormalizado",
+          "telefoneVerificado",
+          "fotoUrl",
+          "cpf",
+          "cpfHash",
+          "cpfUltimos4",
+          "cpfConsentidoEm",
+          "cpfVerificadoEm",
+          "emailVerificado",
+          "termosAceitosEm",
+          "versaoTermosAceitos",
+          "updatedAt"
+        ]);
+
+      allow delete: if isCeo();
+    }
+
+    // =========================
+    // 🔥 FINANCEIRO DONOS (NOVO BLOCO)
+    // =========================
+    match /financeiro_donos/{donoId} {
+      allow read: if isLoggedIn() && (uid() == donoId || isCeo());
+      allow write: if false;
+    }
+
+    // =========================
+    // QUADRAS
+    // =========================
+    match /quadras/{quadraId} {
+      allow read: if true;
+
+      allow create: if isLoggedIn() && (
+        isCeo()
+        || (isDono() && request.resource.data.ownerId == uid())
+      );
+
+      allow update: if isLoggedIn() && (
+        isCeo()
+        || (
+          isOwnerOfQuadra(quadraId)
+          && !(request.resource.data.diff(resource.data).changedKeys().hasAny(["ownerId"]))
+        )
+      );
+
+      allow delete: if isCeo();
+    }
+
+    // =========================
+    // DISPONIBILIDADES
+    // =========================
+    match /disponibilidades/{dispId} {
+      allow read: if true;
+
+      allow create: if isLoggedIn() && (
+        isCeo()
+        || (isDono() && isOwnerOfQuadra(request.resource.data.quadraId))
+      );
+
+      function donoPodeGerenciar() {
+        return isCeo() || (isDono() && isOwnerOfQuadra(resource.data.quadraId));
+      }
+
+      function atletaPodeReservarSlot() {
+        return isAtleta()
+          && podeReservar()
+          && (resource.data.removido == null || resource.data.removido == false)
+          && (resource.data.bloqueado == null || resource.data.bloqueado == false)
+          && resource.data.startAt > request.time
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            "reservadoPorUid",
+            "reservadoEm",
+            "ativo"
+          ])
+          && resource.data.ativo == true
+          && (resource.data.reservadoPorUid == null || resource.data.reservadoPorUid == "")
+          && request.resource.data.reservadoPorUid == uid()
+          && request.resource.data.ativo == false;
+      }
+
+      function atletaPodeDesreservarSlot() {
+        return isAtleta()
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            "reservadoPorUid",
+            "reservadoEm",
+            "ativo"
+          ])
+          && resource.data.reservadoPorUid == uid()
+          && request.resource.data.reservadoPorUid == null
+          && request.resource.data.ativo == true;
+      }
+
+      allow update: if isLoggedIn() && (
+        donoPodeGerenciar()
+        || atletaPodeReservarSlot()
+        || atletaPodeDesreservarSlot()
+      );
+
+      allow delete: if isCeo() || (isDono() && isOwnerOfQuadra(resource.data.quadraId));
+    }
+
+    // =========================
+    // RESERVAS
+    // =========================
+    match /reservas/{reservaId} {
+allow read: if isLoggedIn() && (
+  isCeo()
+  || (isAtleta() && resource.data.clienteUid == uid())
+  || (isDono() && (
+      isOwnerOfQuadra(resource.data.quadraId)
+      || resource.data.clienteUid == uid()
+  ))
+);
+
+      allow create: if isLoggedIn()
+        && isAtleta()
+        && podeReservar()
+        && request.resource.data.clienteUid == uid();
+
+      allow update: if isLoggedIn() && (
+        isCeo()
+        || (
+          isAtleta()
+          && resource.data.clienteUid == uid()
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            "status",
+            "canceladaEm",
+            "canceladaPorUid",
+            "motivoPolitica",
+            "politicaVersao",
+            "comissaoPercentualAplicada",
+            "valorTotalCentavos",
+            "valorPlataformaCentavos",
+            "valorDonoCentavos",
+            "valorClienteCentavos",
+            "calculadoEm"
+          ])
+        )
+        || (
+          isDono()
+          && isOwnerOfQuadra(resource.data.quadraId)
+        )
+      );
+
+      allow delete: if isCeo();
+    }
+
+    // =========================
+    // INFRACTIONS
+    // =========================
+    match /infractions/{infId} {
+      allow read: if isCeo();
+      allow create, update, delete: if false;
+    }
+
+    // =========================
+    // AVALIACOES
+    // =========================
+    match /avaliacoes/{avId} {
+      allow read: if true;
+      allow create: if isLoggedIn() && isAtleta() && request.resource.data.clienteUid == uid();
+      allow update, delete: if isCeo();
+    }
+
+    // default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

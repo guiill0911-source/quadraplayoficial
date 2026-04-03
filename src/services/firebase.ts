@@ -11,14 +11,12 @@ const firebaseConfig = {
   appId: "1:550982011848:web:f6cdbff5b15c05454ccefd",
 };
 
-// inicializa app
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
-// serviços
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+auth.languageCode = "pt-BR";
 
-// ⚠️ AQUI ESTÁ A CORREÇÃO CRÍTICA
 export const storage = getStorage(
   app,
   "gs://quadraplayoficial.firebasestorage.app"

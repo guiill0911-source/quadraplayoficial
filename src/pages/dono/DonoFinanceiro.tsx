@@ -69,11 +69,13 @@ const styles = {
   } as const,
 
   container: {
-    width: "100%",
-    maxWidth: 1200,
-    margin: "0 auto",
-    padding: "20px 16px 32px",
-  } as const,
+  width: "100%",
+  maxWidth: 1200,
+  margin: "0 auto",
+  padding: "20px 16px 32px",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+} as const,
 
   backLink: {
     display: "inline-flex",
@@ -170,7 +172,7 @@ const styles = {
 
   sectionGrid: {
     display: "grid",
-    gridTemplateColumns: "1.45fr 1fr",
+    gridTemplateColumns: "1fr",
     gap: 18,
     marginTop: 18,
   } as const,
@@ -288,7 +290,7 @@ const styles = {
   statsGrid: {
     marginTop: 18,
     display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 14,
   } as const,
 
@@ -327,7 +329,7 @@ const styles = {
 
   statsMiniGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gridTemplateColumns: "1fr 1fr",
     gap: 12,
     marginTop: 16,
   } as const,
@@ -449,7 +451,7 @@ const styles = {
   moneyRow: {
     marginTop: 12,
     display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 10,
   } as const,
 

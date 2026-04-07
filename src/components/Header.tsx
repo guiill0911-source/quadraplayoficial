@@ -63,10 +63,7 @@ export default function Header() {
   };
 
   const mostrarBottomNav = role === "atleta" || role === "dono";
-  const nomeMenuReservas =
-  role === "dono"
-    ? "Marcadas"
-    : "Reservas";
+  const nomeMenuReservas = role === "dono" ? "Marcadas" : "Reservas";
 
   return (
     <>
@@ -81,24 +78,24 @@ export default function Header() {
 
         <div style={styles.inner}>
           <div style={styles.left}>
-            <Link to="/" style={styles.logoWrap}>
+            <Link to="/home" style={styles.logoWrap}>
               <span style={styles.logoBadge}>QP</span>
 
-              <div>
+              <div style={styles.logoTextWrap}>
                 <span style={styles.logo}>Quadra Play</span>
-                <div style={styles.tagline}>O seu jogo começa aqui</div>
+                <div style={styles.tagline}>Seu jogo começa aqui</div>
               </div>
             </Link>
           </div>
 
           <div style={styles.right}>
-            {role === "dono" ? (
-              <>
+            {role === "dono" && (
+              <div style={styles.ownerMenu}>
                 <Link
                   to="/dono"
                   style={{
-                    ...styles.link,
-                    ...(isActive("/dono") ? styles.linkActive : {}),
+                    ...styles.ownerLink,
+                    ...(isActive("/dono") ? styles.ownerLinkActive : {}),
                   }}
                 >
                   Painel
@@ -107,8 +104,8 @@ export default function Header() {
                 <Link
                   to="/dono/central"
                   style={{
-                    ...styles.link,
-                    ...(isActive("/dono/central") ? styles.linkActive : {}),
+                    ...styles.ownerLink,
+                    ...(isActive("/dono/central") ? styles.ownerLinkActive : {}),
                   }}
                 >
                   Central
@@ -117,52 +114,14 @@ export default function Header() {
                 <Link
                   to="/nova-quadra"
                   style={{
-                    ...styles.link,
-                    ...(isActive("/nova-quadra") ? styles.linkActive : {}),
+                    ...styles.ownerLink,
+                    ...(isActive("/nova-quadra") ? styles.ownerLinkActive : {}),
                   }}
                 >
-                  Nova Quadra
-                </Link>
-              </>
-            ) : null}
-
-            {role === "ceo" ? (
-              <div style={styles.ceoGroup}>
-                <Link
-                  to="/ceo"
-                  style={{
-                    ...styles.ceoLink,
-                    ...(isActive("/ceo") &&
-                    !isActive("/ceo/financeiro") &&
-                    !isActive("/ceo/quadras")
-                      ? styles.ceoLinkActive
-                      : {}),
-                  }}
-                >
-                  Dashboard CEO
-                </Link>
-
-                <Link
-                  to="/ceo/financeiro"
-                  style={{
-                    ...styles.ceoLink,
-                    ...(isActive("/ceo/financeiro") ? styles.ceoLinkActive : {}),
-                  }}
-                >
-                  Financeiro CEO
-                </Link>
-
-                <Link
-                  to="/ceo/quadras"
-                  style={{
-                    ...styles.ceoLink,
-                    ...(isActive("/ceo/quadras") ? styles.ceoLinkActive : {}),
-                  }}
-                >
-                  Quadras do app
+                  Nova
                 </Link>
               </div>
-            ) : null}
+            )}
 
             {userData ? (
               <span style={styles.user}>Olá, {userData.nome || "Usuário"}</span>
@@ -177,15 +136,15 @@ export default function Header() {
         </div>
       </header>
 
-      <SuspensaoBanner />
+      {false && <SuspensaoBanner />}
 
       {mostrarBottomNav ? (
         <nav style={styles.bottomNav}>
           <Link
-            to="/"
+            to="/home"
             style={{
               ...styles.bottomItem,
-              ...(isActive("/") ? styles.bottomItemActive : {}),
+              ...(isActive("/home") ? styles.bottomItemActive : {}),
             }}
           >
             <span style={styles.bottomIcon}>⌂</span>
@@ -196,7 +155,11 @@ export default function Header() {
             to={role === "dono" ? "/dono/reservas" : "/minhas-reservas"}
             style={{
               ...styles.bottomItem,
-              ...(isActive("/minhas-reservas") ? styles.bottomItemActive : {}),
+              ...((role === "dono"
+                ? isActive("/dono/reservas")
+                : isActive("/minhas-reservas"))
+                ? styles.bottomItemActive
+                : {}),
             }}
           >
             <span style={styles.bottomIcon}>◷</span>
@@ -223,8 +186,8 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     position: "relative",
     width: "100%",
-    borderBottom: "1px solid #1e293b",
-    overflow: "hidden",
+    borderBottom: "1px solid rgba(30, 41, 59, 0.8)",
+    overflowX: "hidden"
   },
 
   bgImage: {
@@ -232,14 +195,14 @@ const styles: Record<string, React.CSSProperties> = {
     inset: 0,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    opacity: 0.25,
+    opacity: 0.12,
   },
 
   overlay: {
     position: "absolute",
     inset: 0,
     background:
-      "linear-gradient(180deg, rgba(2,6,23,0.75) 0%, rgba(2,6,23,0.9) 100%)",
+      "linear-gradient(180deg, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.96) 100%)",
   },
 
   inner: {
@@ -247,165 +210,170 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 2,
     maxWidth: "1280px",
     margin: "0 auto",
-    padding: "20px 24px",
+    padding: "10px 12px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 16,
+    gap: 10,
     flexWrap: "wrap",
   },
 
   left: {
     display: "flex",
     alignItems: "center",
+    minWidth: 0,
+    flexShrink: 0,
   },
 
   right: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 8,
     flexWrap: "wrap",
     justifyContent: "flex-end",
+    marginLeft: "auto",
   },
 
   logoWrap: {
     display: "flex",
     alignItems: "center",
-    gap: 14,
+    gap: 10,
     textDecoration: "none",
+    minWidth: 0,
+  },
+
+  logoTextWrap: {
+    minWidth: 0,
   },
 
   logoBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 11,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     background: "linear-gradient(135deg, #2563eb, #0f172a)",
     color: "#fff",
     fontWeight: 900,
-    fontSize: 14,
+    fontSize: 11,
+    flexShrink: 0,
   },
 
   logo: {
     fontWeight: 900,
-    fontSize: 26,
-    color: "#fff",
+    fontSize: 17,
+    color: "#f8fafc",
+    letterSpacing: -0.3,
+    lineHeight: 1.05,
+    display: "block",
   },
 
   tagline: {
-    fontSize: 12,
-    color: "#94a3b8",
+    fontSize: 10,
+    color: "#60a5fa",
     marginTop: 2,
+    lineHeight: 1.1,
   },
 
-  link: {
-    textDecoration: "none",
-    color: "#e2e8f0",
-    fontSize: "14px",
-    fontWeight: 800,
-    padding: "8px 10px",
-    borderRadius: "10px",
-    transition: "all 0.18s ease",
-  },
-
-  linkActive: {
-    background: "rgba(255,255,255,0.10)",
-    color: "#fff",
-    border: "1px solid rgba(255,255,255,0.14)",
-  },
-
-  ceoGroup: {
+  ownerMenu: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
+    gap: 6,
     flexWrap: "wrap",
-    padding: "6px",
-    borderRadius: "16px",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    boxShadow: "0 10px 24px rgba(15, 23, 42, 0.12)",
   },
 
-  ceoLink: {
+  ownerLink: {
     textDecoration: "none",
-    color: "#e2e8f0",
-    fontSize: "14px",
-    fontWeight: 900,
-    padding: "10px 12px",
-    borderRadius: "12px",
+    color: "#ecfdf5",
+    fontSize: 12,
+    fontWeight: 800,
+    padding: "6px 10px",
+    borderRadius: 10,
+    lineHeight: 1.1,
+    background: "linear-gradient(135deg, rgba(22,163,74,0.24), rgba(34,197,94,0.18))",
+    border: "1px solid rgba(74, 222, 128, 0.28)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
     transition: "all 0.18s ease",
-    whiteSpace: "nowrap",
   },
 
-  ceoLinkActive: {
-    background: "linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)",
-    color: "#fff",
-    boxShadow: "0 10px 20px rgba(29, 78, 216, 0.18)",
+  ownerLinkActive: {
+    background: "linear-gradient(135deg, rgba(22,163,74,0.42), rgba(34,197,94,0.30))",
+    color: "#ffffff",
+    border: "1px solid rgba(134, 239, 172, 0.42)",
   },
 
   user: {
-    color: "#e2e8f0",
+    color: "#dbeafe",
     fontWeight: 700,
-    fontSize: 14,
+    fontSize: 12,
+    lineHeight: 1.1,
+    padding: "0 2px",
+    whiteSpace: "nowrap",
   },
 
   logout: {
-    background: "#22c55e",
-    color: "#022c22",
+    background: "linear-gradient(135deg, #ef4444, #dc2626)",
+    color: "#fff",
     border: "none",
-    padding: "8px 12px",
+    padding: "6px 11px",
     borderRadius: 10,
     fontWeight: 800,
-    cursor: "pointer",
-  },
-
-  bottomNav: {
-    position: "fixed",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1200,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 8,
-    padding: "10px 12px calc(10px + env(safe-area-inset-bottom))",
-    background: "rgba(15, 23, 42, 0.78)",
-    borderTop: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 -10px 28px rgba(15,23,42,0.22)",
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
-  },
-
-  bottomItem: {
-    minHeight: 58,
-    borderRadius: 16,
-    textDecoration: "none",
-    color: "#cbd5e1",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    fontWeight: 800,
     fontSize: 12,
-    transition: "all 0.18s ease",
+    cursor: "pointer",
+    lineHeight: 1.1,
+    boxShadow: "0 8px 18px rgba(220,38,38,0.20)",
   },
+
+ bottomNav: {
+  position: "fixed",
+  left: 12,
+  right: 12,
+  bottom: 8,
+  zIndex: 9999,
+  display: "grid",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: 6,
+  padding: "5px 6px calc(5px + env(safe-area-inset-bottom))",
+  background: "rgba(15, 23, 42, 0.96)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: 14,
+  backdropFilter: "blur(14px)",
+  boxShadow: "0 6px 16px rgba(2,6,23,0.16)",
+  pointerEvents: "none",
+  maxWidth: 360,
+  margin: "0 auto",
+},
+
+ bottomItem: {
+  minHeight: 34,
+  borderRadius: 10,
+  textDecoration: "none",
+  color: "#cbd5e1",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 1,
+  fontWeight: 700,
+  fontSize: 9,
+  lineHeight: 1,
+  pointerEvents: "auto",
+  padding: "2px 4px",
+},
 
   bottomItemActive: {
-    background: "rgba(37, 99, 235, 0.22)",
-    color: "#fff",
-    boxShadow: "inset 0 0 0 1px rgba(96, 165, 250, 0.22)",
+    background: "rgba(37, 99, 235, 0.20)",
+    color: "#ffffff",
   },
 
   bottomIcon: {
-    fontSize: 18,
-    lineHeight: 1,
-  },
+  fontSize: 12,
+  lineHeight: 1,
+},
 
-  bottomText: {
-    fontSize: 12,
-    fontWeight: 800,
-  },
+bottomText: {
+  fontSize: 9,
+  lineHeight: 1,
+},
 };

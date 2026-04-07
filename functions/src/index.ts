@@ -397,12 +397,16 @@ const resp = await fetch("https://api.mercadopago.com/v1/payments", {
   const rSnap = await tx.get(reservaRef);
   const dSnap = await tx.get(dispRef);
 
-  if (rSnap.exists) {
+    if (rSnap.exists) {
     tx.update(reservaRef, {
       status: "cancelada",
+      pagamentoStatus: "cancelado",
+      mpStatus: "erro_criacao_pix",
       canceladaEm: admin.firestore.FieldValue.serverTimestamp(),
       canceladaPorUid: null,
-      motivoPolitica: "cancelamento_dono",
+      canceladaPorSistema: true,
+      canceladaMotivo: "falha_criacao_pix",
+      motivoPolitica: "falha_criacao_pix",
       calculadoEm: admin.firestore.FieldValue.serverTimestamp(),
     });
   }
@@ -765,6 +769,10 @@ if (status === "approved") {
         return;
       }
 
+            const statusReservaAtual = String(r?.status ?? "").toLowerCase();
+      const pagamentoStatusAtual = String(r?.pagamentoStatus ?? "").toLowerCase();
+      const canceladaMotivoAtual = String(r?.canceladaMotivo ?? "").toLowerCase();
+
       const patch: any = {
         mpPaymentId: String(paymentId),
         mpStatus: status || null,
@@ -777,7 +785,25 @@ if (status === "approved") {
         },
       };
 
-      if (status === "approved") {
+      // ✅ Se já pagou, não faz nada
+      if (pagamentoStatusAtual === "pago") {
+        res.status(200).send("ok");
+        return;
+      }
+
+      // ✅ Se já foi cancelada por PIX expirado, não pode mais voltar para confirmada
+      if (
+        statusReservaAtual === "cancelada" &&
+        canceladaMotivoAtual === "pix_expirado"
+      ) {
+        patch.pagamentoStatus = "expirado";
+        await reservaRef.update(patch);
+        res.status(200).send("ok");
+        return;
+      }
+
+      if (status === "approved" || status === "accredited") {
+        patch.status = "confirmada";
         patch.pagamentoStatus = "pago";
         patch.pagoEm = admin.firestore.FieldValue.serverTimestamp();
         patch.valorPago = transactionAmount;
@@ -785,6 +811,10 @@ if (status === "approved") {
 
         patch.statusRepasse = "repassado";
         patch.repassadoEm = admin.firestore.FieldValue.serverTimestamp();
+      } else if (status === "cancelled" || status === "rejected") {
+        patch.pagamentoStatus = "cancelado";
+      } else if (status === "expired") {
+        patch.pagamentoStatus = "expirado";
       } else {
         patch.pagamentoStatus = "pendente";
       }
@@ -1926,11 +1956,13 @@ export const autoCancelarPixExpirado = onSchedule(
   if (!expirou) continue;
         const disponibilidadeId = String(r?.disponibilidadeId ?? "").trim();
 
-        batch.update(docSnap.ref, {
+                batch.update(docSnap.ref, {
           status: "cancelada",
+          pagamentoStatus: "expirado",
+          mpStatus: "expired",
           canceladaEm: admin.firestore.FieldValue.serverTimestamp(),
           canceladaPorUid: null,
-          motivoPolitica: "cancelamento_dono",
+          motivoPolitica: "pix_expirado",
           canceladaPorSistema: true,
           canceladaMotivo: "pix_expirado",
           calculadoEm: admin.firestore.FieldValue.serverTimestamp(),

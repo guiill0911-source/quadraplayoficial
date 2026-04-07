@@ -49,6 +49,7 @@ type QuadraDoc = {
   esportes?: string[];
   valoresPorEsporte?: Record<string, number>;
   fotoCapaUrl?: string | null;
+  fotos?: string[];
   comodidades?: Comodidades;
 };
 
@@ -177,7 +178,8 @@ const styles = {
     width: "100%",
     maxWidth: 1120,
     margin: "0 auto",
-    padding: "20px 16px 40px",
+    padding: "12px 12px 96px",
+    boxSizing: "border-box",
   } as CSSProperties,
 
   topLink: {
@@ -232,18 +234,19 @@ const styles = {
 
   heroTitleOnImage: {
     margin: 0,
-    fontSize: 34,
+    fontSize: 20,
     lineHeight: 1.05,
     color: "#fff",
-    fontWeight: 900,
-    letterSpacing: -0.7,
-    textShadow: "0 8px 24px rgba(15,23,42,0.35)",
+    fontWeight: 700,
+    letterSpacing: -0.3,
+    textShadow: "0 4px 12px rgba(15,23,42,0.25)",
   } as CSSProperties,
 
   heroSubOnImage: {
     margin: 0,
     color: "rgba(255,255,255,0.92)",
-    fontSize: 15,
+    fontSize: 12,
+    opacity: 0.85,
     fontWeight: 600,
     textShadow: "0 6px 18px rgba(15,23,42,0.35)",
   } as CSSProperties,
@@ -262,10 +265,10 @@ const styles = {
     background: "rgba(255,255,255,0.92)",
     color: "#0f172a",
     borderRadius: 999,
-    padding: "10px 14px",
-    fontSize: 13,
-    fontWeight: 900,
-    boxShadow: "0 10px 22px rgba(15,23,42,0.18)",
+    padding: "4px 8px",
+    fontSize: 11,
+    fontWeight: 500,
+    boxShadow: "0 4px 10px rgba(15,23,42,0.12)",
   } as CSSProperties,
 
   coverOverlay: {
@@ -274,16 +277,84 @@ const styles = {
     background: "linear-gradient(to top, rgba(15,23,42,0.75), rgba(15,23,42,0.18))",
   } as CSSProperties,
 
+  galleryNavLeft: {
+    position: "absolute",
+    left: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 36,
+    height: 36,
+    borderRadius: "50%",
+    border: "none",
+    background: "rgba(15,23,42,0.55)",
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: 900,
+    cursor: "pointer",
+    zIndex: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  } as CSSProperties,
+
+  galleryNavRight: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: 36,
+    height: 36,
+    borderRadius: "50%",
+    border: "none",
+    background: "rgba(15,23,42,0.55)",
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: 900,
+    cursor: "pointer",
+    zIndex: 4,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  } as CSSProperties,
+
+  galleryDots: {
+    position: "absolute",
+    left: "50%",
+    bottom: 12,
+    transform: "translateX(-50%)",
+    display: "flex",
+    gap: 8,
+    zIndex: 4,
+  } as CSSProperties,
+
+  galleryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    border: "none",
+    background: "rgba(255,255,255,0.55)",
+    cursor: "pointer",
+    padding: 0,
+  } as CSSProperties,
+
+  galleryDotActive: {
+    background: "#ffffff",
+    transform: "scale(1.2)",
+  } as CSSProperties,
+
   heroContent: {
     padding: 22,
   } as CSSProperties,
 
-  badgeRow: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-    marginBottom: 12,
-  } as CSSProperties,
+badgeRow: {
+  position: "absolute",
+  top: 14,
+  left: 14,
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  zIndex: 3,
+} as CSSProperties,
 
   pillDark: {
     display: "inline-flex",
@@ -292,9 +363,9 @@ const styles = {
     background: "#0f172a",
     color: "#fff",
     borderRadius: 999,
-    padding: "8px 12px",
-    fontSize: 13,
-    fontWeight: 700,
+    padding: "3px 8px",
+    fontSize: 10,
+    fontWeight: 600,
   } as CSSProperties,
 
   pillSoft: {
@@ -304,9 +375,9 @@ const styles = {
     background: "#ecfeff",
     color: "#155e75",
     borderRadius: 999,
-    padding: "8px 12px",
-    fontSize: 13,
-    fontWeight: 700,
+    padding: "3px 8px",
+    fontSize: 10,
+    fontWeight: 500,
     border: "1px solid #bae6fd",
   } as CSSProperties,
 
@@ -647,6 +718,26 @@ const styles = {
     fontSize: 12,
     border: "1px solid #86efac",
   } as CSSProperties,
+
+  emailPopup: {
+    position: "fixed",
+    top: 76,
+    left: "50%",
+    transform: "translateX(-50%)",
+    width: "calc(100% - 32px)",
+    maxWidth: 420,
+    padding: "12px 14px",
+    borderRadius: 14,
+    background: "#fff7ed",
+    border: "1px solid #fdba74",
+    color: "#9a3412",
+    fontWeight: 800,
+    fontSize: 13,
+    lineHeight: 1.4,
+    zIndex: 3000,
+    boxShadow: "0 14px 30px rgba(15,23,42,0.18)",
+    textAlign: "center",
+  } as CSSProperties,
 };
 
 /* =======================
@@ -661,6 +752,7 @@ export default function Quadra() {
 
   const [loading, setLoading] = useState(true);
   const [quadra, setQuadra] = useState<QuadraDoc | null>(null);
+  const [fotoIndex, setFotoIndex] = useState(0);
   const [mpStatus, setMpStatus] = useState<MpConnectionStatus>("not_connected");
   const [erro, setErro] = useState<string | null>(null);
 
@@ -679,6 +771,7 @@ export default function Quadra() {
   const [msg, setMsg] = useState("");
   const [mostrarSucesso, setMostrarSucesso] = useState(false);
   const [erroReserva, setErroReserva] = useState("");
+  const [emailWarning, setEmailWarning] = useState(false);
 
   const [resumo, setResumo] = useState<{ total: number; media: number }>({
     total: 0,
@@ -739,24 +832,9 @@ export default function Quadra() {
 
     try {
       await currentUser.reload();
-
-      if (currentUser.emailVerified) {
-        window.alert("Email verificado com sucesso!");
-        return true;
-      }
-
-      const reenviar = window.confirm(
-        "Seu email ainda não foi verificado.\n\nQuer reenviar o email de verificação agora?"
-      );
-
-      if (reenviar) {
-        await reenviarEmailVerificacao();
-      }
-
-      return false;
+      return currentUser.emailVerified;
     } catch (e) {
       console.error(e);
-      window.alert("Não consegui atualizar o status do email.");
       return false;
     }
   }
@@ -780,10 +858,10 @@ export default function Quadra() {
   }, []);
 
   useEffect(() => {
-  if (mpStatus !== "connected" && pagamentoTipo === "pix") {
-    setPagamentoTipo("presencial");
-  }
-}, [mpStatus, pagamentoTipo]);
+    if (mpStatus !== "connected" && pagamentoTipo === "pix") {
+      setPagamentoTipo("presencial");
+    }
+  }, [mpStatus, pagamentoTipo]);
 
   /* =======================
      CARREGAR QUADRA
@@ -802,31 +880,33 @@ export default function Quadra() {
         } else {
           const q = snap.data() as QuadraDoc;
           setQuadra(q);
+          setFotoIndex(0);
+
           if (q.ownerId) {
-  const ownerRef = doc(db, "users", q.ownerId);
-  const ownerSnap = await getDoc(ownerRef);
+            const ownerRef = doc(db, "users", q.ownerId);
+            const ownerSnap = await getDoc(ownerRef);
 
-  if (ownerSnap.exists()) {
-    const ownerData = ownerSnap.data() as any;
+            if (ownerSnap.exists()) {
+              const ownerData = ownerSnap.data() as any;
+              const status = ownerData?.mpConnectionStatus;
 
-    const status = ownerData?.mpConnectionStatus;
+              if (
+                status === "not_connected" ||
+                status === "pending" ||
+                status === "connected" ||
+                status === "error"
+              ) {
+                setMpStatus(status);
+              } else {
+                setMpStatus("not_connected");
+              }
+            } else {
+              setMpStatus("not_connected");
+            }
+          } else {
+            setMpStatus("not_connected");
+          }
 
-    if (
-      status === "not_connected" ||
-      status === "pending" ||
-      status === "connected" ||
-      status === "error"
-    ) {
-      setMpStatus(status);
-    } else {
-      setMpStatus("not_connected");
-    }
-  } else {
-    setMpStatus("not_connected");
-  }
-} else {
-  setMpStatus("not_connected");
-}
           setEsporte(q.esportes?.[0] ?? "");
         }
 
@@ -850,7 +930,7 @@ export default function Quadra() {
             setTelefoneCliente(telefoneCadastro);
           }
         }
-          } catch (e) {
+      } catch (e) {
         console.error("ERRO AO CARREGAR QUADRA:", e);
         setErro("Erro ao carregar quadra");
       } finally {
@@ -1165,7 +1245,12 @@ export default function Quadra() {
     if (!currentUser.emailVerified) {
       const okEmail = await validarEmailAgora();
       if (!okEmail) {
-        setErroReserva("Verifique seu email para liberar reservas e pagamentos.");
+        setEmailWarning(true);
+
+        setTimeout(() => {
+          setEmailWarning(false);
+        }, 5000);
+
         return;
       }
     }
@@ -1176,11 +1261,11 @@ export default function Quadra() {
     }
 
     if (pagamentoTipo === "pix" && !pixLiberado) {
-  setErroReserva(
-    "O pagamento via PIX não está disponível nesta quadra no momento. Escolha pagamento presencial."
-  );
-  return;
-}
+      setErroReserva(
+        "O pagamento via PIX não está disponível nesta quadra no momento. Escolha pagamento presencial."
+      );
+      return;
+    }
 
     try {
       const userRef = doc(db, "users", currentUser.uid);
@@ -1400,8 +1485,21 @@ export default function Quadra() {
       ? formatBRL(Number(quadra.valoresPorEsporte[esporte]))
       : null;
 
+  const fotos =
+    Array.isArray(quadra.fotos) && quadra.fotos.length > 0
+      ? quadra.fotos.filter(Boolean)
+      : quadra.fotoCapaUrl
+      ? [quadra.fotoCapaUrl]
+      : [];
+
   return (
     <div style={styles.page}>
+      {emailWarning && (
+        <div style={styles.emailPopup}>
+          ⚠️ Verifique seu email para liberar reservas e pagamentos.
+        </div>
+      )}
+
       <div style={styles.container}>
         <Link to="/" style={styles.topLink}>
           ← Voltar
@@ -1409,41 +1507,92 @@ export default function Quadra() {
 
         <div style={styles.heroCard}>
           <div style={styles.coverWrap}>
-            {quadra.fotoCapaUrl ? (
-              <img src={quadra.fotoCapaUrl} alt={quadra.nome} style={styles.coverImg} />
+            {fotos.length > 0 ? (
+              <img
+                src={fotos[fotoIndex] ?? fotos[0]}
+                alt={quadra.nome}
+                style={styles.coverImg}
+              />
             ) : null}
-            <div style={styles.coverOverlay} />
 
-            <div style={styles.heroFloatingInfo}>
-              <div style={styles.heroTitleWrap}>
-                <div style={styles.badgeRow}>
-                  <span style={styles.pillDark}>Quadra Play</span>
-                  <span style={styles.pillSoft}>{quadra.cidade}</span>
+            <div style={styles.coverOverlay} />
+            <div style={styles.badgeRow}>
+                    <span style={styles.pillDark}>Quadra Play</span>
+                    <span style={styles.pillSoft}>{quadra.cidade}</span>
+                  </div>
+
+            {fotos.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFotoIndex((prev) => (prev === 0 ? fotos.length - 1 : prev - 1))
+                  }
+                  style={styles.galleryNavLeft}
+                  aria-label="Foto anterior"
+                >
+                  ‹
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setFotoIndex((prev) => (prev === fotos.length - 1 ? 0 : prev + 1))
+                  }
+                  style={styles.galleryNavRight}
+                  aria-label="Próxima foto"
+                >
+                  ›
+                </button>
+              </>
+            ) : null}
+
+            {fotoIndex === 0 && (
+              <div style={styles.heroFloatingInfo}>
+                <div style={styles.heroTitleWrap}>
+                  
+
+                  <h1 style={styles.heroTitleOnImage}>{quadra.nome}</h1>
+
+                  <p style={styles.heroSubOnImage}>
+                    {quadra.endereco?.trim()
+                      ? `${quadra.endereco}`
+                      : `Localizada em ${quadra.cidade}`}
+                  </p>
                 </div>
 
-                <h1 style={styles.heroTitleOnImage}>{quadra.nome}</h1>
+                <div style={styles.heroMiniStats}>
+                  {precoDestaque ? (
+                    <span style={styles.heroMiniPill}>💸 {precoDestaque}</span>
+                  ) : null}
 
-                <p style={styles.heroSubOnImage}>
-                  {quadra.endereco?.trim()
-                    ? `${quadra.endereco}`
-                    : `Localizada em ${quadra.cidade}`}
-                </p>
+                  <span style={styles.heroMiniPill}>
+                    ⭐ {loadingResumo ? "..." : mediaStr}
+                  </span>
+
+                  <span style={styles.heroMiniPill}>
+                    🏟️ {(quadra.esportes ?? []).length} esporte(s)
+                  </span>
+                </div>
               </div>
+            )}
 
-              <div style={styles.heroMiniStats}>
-                {precoDestaque ? (
-                  <span style={styles.heroMiniPill}>💸 {precoDestaque}</span>
-                ) : null}
-
-                <span style={styles.heroMiniPill}>
-                  ⭐ {loadingResumo ? "..." : mediaStr}
-                </span>
-
-                <span style={styles.heroMiniPill}>
-                  🏟️ {(quadra.esportes ?? []).length} esporte(s)
-                </span>
+            {fotos.length > 1 ? (
+              <div style={styles.galleryDots}>
+                {fotos.map((_, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setFotoIndex(index)}
+                    style={{
+                      ...styles.galleryDot,
+                      ...(fotoIndex === index ? styles.galleryDotActive : {}),
+                    }}
+                    aria-label={`Ir para foto ${index + 1}`}
+                  />
+                ))}
               </div>
-            </div>
+            ) : null}
           </div>
 
           <div style={styles.heroContent}>
@@ -1580,35 +1729,36 @@ export default function Quadra() {
 
                 <label style={styles.radioCard}>
                   <input
-  type="radio"
-  value="pix"
-  checked={pagamentoTipo === "pix"}
-  onChange={() => {
-    if (pixLiberado) {
-      setPagamentoTipo("pix");
-    }
-  }}
-  disabled={suspensoInfo.suspenso || !pixLiberado}
-/>
+                    type="radio"
+                    value="pix"
+                    checked={pagamentoTipo === "pix"}
+                    onChange={() => {
+                      if (pixLiberado) {
+                        setPagamentoTipo("pix");
+                      }
+                    }}
+                    disabled={suspensoInfo.suspenso || !pixLiberado}
+                  />
                   {pixLiberado ? "Pagar via PIX" : "PIX indisponível"}
                 </label>
+
                 {!pixLiberado && (
-  <div
-    style={{
-      marginTop: 12,
-      padding: 12,
-      borderRadius: 12,
-      border: "1px solid #fecaca",
-      background: "#fff1f2",
-      color: "#7f1d1d",
-      fontWeight: 600,
-      lineHeight: 1.5,
-    }}
-  >
-    Pagamento via PIX indisponível no momento para esta quadra.
-    Utilize pagamento presencial.
-  </div>
-)}
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: 12,
+                      borderRadius: 12,
+                      border: "1px solid #fecaca",
+                      background: "#fff1f2",
+                      color: "#7f1d1d",
+                      fontWeight: 600,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Pagamento via PIX indisponível no momento para esta quadra.
+                    Utilize pagamento presencial.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1697,48 +1847,48 @@ export default function Quadra() {
                       </div>
 
                       <div style={{ display: "grid", gap: 4 }}>
-  {s.promocaoAtiva && s.valorPromocional != null ? (
-    <>
-      <div
-        style={{
-          fontSize: 14,
-          color: "#94a3b8",
-          textDecoration: "line-through",
-          fontWeight: 700,
-        }}
-      >
-        De: {formatBRL(Number(s.valorOriginal ?? s.valor ?? 0))}
-      </div>
+                        {s.promocaoAtiva && s.valorPromocional != null ? (
+                          <>
+                            <div
+                              style={{
+                                fontSize: 14,
+                                color: "#94a3b8",
+                                textDecoration: "line-through",
+                                fontWeight: 700,
+                              }}
+                            >
+                              De: {formatBRL(Number(s.valorOriginal ?? s.valor ?? 0))}
+                            </div>
 
-      <div
-        style={{
-          ...styles.slotPriceBig,
-          color: "#16a34a",
-        }}
-      >
-        Por: {formatBRL(Number(s.valorPromocional))}
-      </div>
+                            <div
+                              style={{
+                                ...styles.slotPriceBig,
+                                color: "#16a34a",
+                              }}
+                            >
+                              Por: {formatBRL(Number(s.valorPromocional))}
+                            </div>
 
-      <div
-        style={{
-          display: "inline-flex",
-          width: "fit-content",
-          borderRadius: 999,
-          padding: "6px 10px",
-          background: "#dcfce7",
-          border: "1px solid #86efac",
-          color: "#166534",
-          fontWeight: 800,
-          fontSize: 12,
-        }}
-      >
-        Promoção ativa
-      </div>
-    </>
-  ) : (
-    <div style={styles.slotPriceBig}>{formatBRL(Number(s.valor ?? 0))}</div>
-  )}
-</div>
+                            <div
+                              style={{
+                                display: "inline-flex",
+                                width: "fit-content",
+                                borderRadius: 999,
+                                padding: "6px 10px",
+                                background: "#dcfce7",
+                                border: "1px solid #86efac",
+                                color: "#166534",
+                                fontWeight: 800,
+                                fontSize: 12,
+                              }}
+                            >
+                              Promoção ativa
+                            </div>
+                          </>
+                        ) : (
+                          <div style={styles.slotPriceBig}>{formatBRL(Number(s.valor ?? 0))}</div>
+                        )}
+                      </div>
                     </div>
 
                     <div style={styles.slotRight}>

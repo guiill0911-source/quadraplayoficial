@@ -172,14 +172,16 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: "100vh",
     background:
       "linear-gradient(180deg, #0f172a 0px, #111827 190px, #f8fafc 190px, #f8fafc 100%)",
+      overflowX: "hidden",
   },
   container: {
     maxWidth: 1180,
     margin: "0 auto",
     padding: "18px 16px 40px",
+    boxSizing: "border-box",
   },
   hero: {
-    background: "linear-gradient(135deg, #111827, #1e293b)",
+    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
     color: "#fff",
     borderRadius: 24,
     padding: "26px 24px",
@@ -196,19 +198,19 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 12,
   },
   heroTitle: {
-    margin: 0,
-    fontSize: 36,
-    lineHeight: 1.08,
-    fontWeight: 900,
-  },
+  margin: 0,
+  fontSize: 28,
+  lineHeight: 1.1,
+  fontWeight: 900,
+},
   heroText: {
-    marginTop: 12,
-    marginBottom: 0,
-    color: "#cbd5e1",
-    fontSize: 15,
-    lineHeight: 1.6,
-    maxWidth: 780,
-  },
+  marginTop: 8,
+  marginBottom: 0,
+  color: "#e2e8f0",
+  fontSize: 14,
+  lineHeight: 1.5,
+  maxWidth: 520,
+},
   layout: {
     marginTop: 18,
     display: "grid",
@@ -358,6 +360,9 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#0f172a",
     fontSize: 14,
     fontWeight: 900,
+    maxWidth: "100%",
+    wordBreak: "break-word",
+    textAlign: "right",
   },
 };
 
@@ -659,15 +664,14 @@ export default function NovaQuadra() {
             <div style={styles.heroBadge}>Cadastro de nova quadra</div>
             <h1 style={styles.heroTitle}>Nova Quadra</h1>
             <p style={styles.heroText}>
-              Cadastre seu espaço com endereço, esportes, valores, comodidades e foto de capa.
-              Depois disso, você segue para a etapa de geração de horários.
-            </p>
+  Cadastre sua quadra e comece a receber reservas.
+</p>
           </div>
 
           <div
             style={{
               ...styles.layout,
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gridTemplateColumns: "1fr",
             }}
           >
             <div style={styles.card}>
@@ -696,7 +700,7 @@ export default function NovaQuadra() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "minmax(160px, 180px) auto 1fr",
+                      gridTemplateColumns: "1fr",
                       gap: 10,
                       marginTop: 14,
                       alignItems: "end",
@@ -734,7 +738,7 @@ export default function NovaQuadra() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "minmax(260px, 1fr) 140px",
+                      gridTemplateColumns: "1fr",
                       gap: 10,
                       marginTop: 14,
                     }}
@@ -763,7 +767,7 @@ export default function NovaQuadra() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 1fr 120px",
+                      gridTemplateColumns: "1fr",
                       gap: 10,
                       marginTop: 14,
                     }}
@@ -978,10 +982,6 @@ export default function NovaQuadra() {
                     />
                   ) : null}
                 </div>
-
-                <button onClick={salvar} disabled={salvando} style={styles.actionBtn}>
-                  {salvando ? "Salvando..." : "Salvar e ir para Etapa 2 (Gerar horários)"}
-                </button>
               </div>
             </div>
 
@@ -1018,6 +1018,8 @@ export default function NovaQuadra() {
                   </div>
                 </div>
 
+
+
                 <div style={styles.summaryRow}>
                   <div style={styles.summaryKey}>Valor geral por hora</div>
                   <div style={styles.summaryValue}>{valorHora.trim() || "—"}</div>
@@ -1050,10 +1052,14 @@ export default function NovaQuadra() {
                 >
                   Após salvar, você seguirá direto para a etapa de geração de horários da quadra.
                 </div>
+                <button onClick={salvar} disabled={salvando} style={styles.actionBtn}>
+  {salvando ? "Salvando..." : "Salvar e ir para Etapa 2 (Gerar horários)"}
+</button>
               </div>
             </div>
           </div>
         </div>
+          
       </div>
     </>
   );

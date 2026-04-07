@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import Header from "../components/Header";
@@ -216,6 +216,14 @@ const styles = {
     background: "linear-gradient(180deg, #fff1f2, #ffffff)",
   } as CSSProperties,
 
+  statusCanceledBox: {
+    marginTop: 16,
+    borderRadius: 20,
+    padding: 18,
+    border: "1px solid #e2e8f0",
+    background: "linear-gradient(180deg, #f8fafc, #ffffff)",
+  } as CSSProperties,
+
   statusTitle: {
     margin: 0,
     fontSize: 18,
@@ -393,6 +401,8 @@ export default function PagamentoPix() {
   const [erro, setErro] = useState("");
   const [tempoRestante, setTempoRestante] = useState(0);
 
+  const autoRefreshQuandoZeraRef = useRef(false);
+
   async function carregarQuadraNome(quadraId: string) {
     if (!quadraId) return;
     try {
@@ -417,6 +427,7 @@ export default function PagamentoPix() {
       }
 
       const data = snap.data() as any;
+
       setReserva({
         id: snap.id,
         quadraId: String(data?.quadraId ?? ""),
@@ -438,6 +449,8 @@ export default function PagamentoPix() {
       if (String(data?.quadraId ?? "").trim()) {
         await carregarQuadraNome(String(data.quadraId));
       }
+
+      setErro("");
     } catch {
       setErro("Erro ao atualizar pagamento.");
     }
@@ -501,47 +514,90 @@ export default function PagamentoPix() {
   const quadraId = String(reserva?.quadraId ?? quadraIdUrl ?? "").trim();
   const quadraNome =
     String(reserva?.quadraNome ?? "").trim() || quadraNomeExtra || "Quadra";
+
   const esporteLabel =
     ESPORTES_LABELS[String(reserva?.esporte ?? "")] ??
     String(reserva?.esporte ?? "—");
 
-  const pago = useMemo(() => {
-    const pagamentoStatus = String(
-      reserva?.pagamentoStatus ?? ""
-    ).toLowerCase();
-    const mpStatus = String(reserva?.mpStatus ?? "").toLowerCase();
-    return (
-      pagamentoStatus === "pago" ||
-      mpStatus === "approved" ||
-      mpStatus === "accredited"
-    );
-  }, [reserva]);
+  const statusNorm = String(reserva?.status ?? "").trim().toLowerCase();
+  const pagamentoStatusNorm = String(reserva?.pagamentoStatus ?? "")
+    .trim()
+    .toLowerCase();
+  const mpStatusNorm = String(reserva?.mpStatus ?? "").trim().toLowerCase();
+  const canceladaMotivoNorm = String(reserva?.canceladaMotivo ?? "")
+    .trim()
+    .toLowerCase();
 
-  const expirado = useMemo(() => {
-    if (!reserva) return false;
+  const pago = useMemo(() => {
     return (
-      String(reserva.status ?? "").toLowerCase() === "cancelada" &&
-      String(reserva.canceladaMotivo ?? "").toLowerCase() === "pix_expirado"
+      pagamentoStatusNorm === "pago" ||
+      pagamentoStatusNorm === "approved" ||
+      pagamentoStatusNorm === "aprovado" ||
+      mpStatusNorm === "approved" ||
+      mpStatusNorm === "accredited" ||
+      statusNorm === "confirmada"
     );
-  }, [reserva]);
+  }, [pagamentoStatusNorm, mpStatusNorm, statusNorm]);
 
   const expiraEm = useMemo(() => {
     const val = reserva?.expiraPagamentoEm;
     if (!val) return null;
 
-    if (typeof val.toDate === "function") return val.toDate();
-    return new Date(val);
+    if (typeof val?.toDate === "function") return val.toDate();
+
+    const data = new Date(val);
+    return Number.isNaN(data.getTime()) ? null : data;
   }, [reserva]);
 
+  const expiradoNoBackend = useMemo(() => {
+    if (!reserva) return false;
+
+    return (
+      (statusNorm === "cancelada" &&
+        (canceladaMotivoNorm === "pix_expirado" ||
+          pagamentoStatusNorm === "expirado")) ||
+      pagamentoStatusNorm === "expirado" ||
+      mpStatusNorm === "expired"
+    );
+  }, [
+    reserva,
+    statusNorm,
+    canceladaMotivoNorm,
+    pagamentoStatusNorm,
+    mpStatusNorm,
+  ]);
+
+  const canceladaSemSerPixExpirado = useMemo(() => {
+    if (!reserva) return false;
+    return statusNorm === "cancelada" && !expiradoNoBackend;
+  }, [reserva, statusNorm, expiradoNoBackend]);
+
+  const expiradoLocal = useMemo(() => {
+    if (!expiraEm || pago || expiradoNoBackend || canceladaSemSerPixExpirado) {
+      return false;
+    }
+    return expiraEm.getTime() <= Date.now();
+  }, [expiraEm, pago, expiradoNoBackend, canceladaSemSerPixExpirado]);
+
+  const expirado = expiradoNoBackend || expiradoLocal;
+
+  const aguardandoPagamento = useMemo(() => {
+    if (!reserva) return false;
+    if (pago) return false;
+    if (expirado) return false;
+    if (canceladaSemSerPixExpirado) return false;
+    return true;
+  }, [reserva, pago, expirado, canceladaSemSerPixExpirado]);
+
   useEffect(() => {
-    if (!expiraEm || pago || expirado) {
+    if (!expiraEm || pago || expiradoNoBackend || canceladaSemSerPixExpirado) {
       setTempoRestante(0);
       return;
     }
 
     const atualizar = () => {
-      const agora = new Date();
-      const diff = Math.floor((expiraEm.getTime() - agora.getTime()) / 1000);
+      const agora = Date.now();
+      const diff = Math.floor((expiraEm.getTime() - agora) / 1000);
       setTempoRestante(diff > 0 ? diff : 0);
     };
 
@@ -549,7 +605,29 @@ export default function PagamentoPix() {
     const interval = setInterval(atualizar, 1000);
 
     return () => clearInterval(interval);
-  }, [expiraEm, pago, expirado]);
+  }, [expiraEm, pago, expiradoNoBackend, canceladaSemSerPixExpirado]);
+
+  useEffect(() => {
+    if (!aguardandoPagamento) {
+      autoRefreshQuandoZeraRef.current = false;
+      return;
+    }
+
+    if (tempoRestante > 0) {
+      autoRefreshQuandoZeraRef.current = false;
+      return;
+    }
+
+    if (autoRefreshQuandoZeraRef.current) return;
+
+    autoRefreshQuandoZeraRef.current = true;
+
+    const t = setTimeout(() => {
+      atualizarAgora();
+    }, 1500);
+
+    return () => clearTimeout(t);
+  }, [tempoRestante, aguardandoPagamento]);
 
   if (loading) {
     return (
@@ -596,6 +674,9 @@ export default function PagamentoPix() {
     );
   }
 
+  const podeCopiarPix =
+    aguardandoPagamento && tempoRestante > 0 && !!String(reserva.pixCopiaECola ?? "").trim();
+
   return (
     <>
       <Header />
@@ -628,6 +709,8 @@ export default function PagamentoPix() {
                   ? "Sua reserva foi realizada com sucesso"
                   : expirado
                   ? "Este PIX expirou"
+                  : canceladaSemSerPixExpirado
+                  ? "Esta reserva foi cancelada"
                   : "Finalize o pagamento para garantir seu horário"}
               </h1>
 
@@ -636,6 +719,8 @@ export default function PagamentoPix() {
                   ? "Pagamento confirmado e horário garantido. Agora você já pode acompanhar tudo nas suas reservas."
                   : expirado
                   ? "O prazo de pagamento terminou e a reserva foi cancelada automaticamente. Você pode voltar para a quadra e escolher outro horário."
+                  : canceladaSemSerPixExpirado
+                  ? "Essa reserva não está mais disponível para pagamento. Você pode voltar para a quadra e escolher outro horário."
                   : "Assim que o PIX for aprovado, a confirmação acontece automaticamente. Pode deixar essa tela aberta enquanto conclui o pagamento no banco."}
               </p>
 
@@ -667,6 +752,8 @@ export default function PagamentoPix() {
                     ? "Reserva confirmada"
                     : expirado
                     ? "Pagamento não concluído"
+                    : canceladaSemSerPixExpirado
+                    ? "Reserva cancelada"
                     : "Aguardando pagamento"}
                 </h2>
 
@@ -675,6 +762,8 @@ export default function PagamentoPix() {
                     ? "Seu horário já está garantido no Quadra Play."
                     : expirado
                     ? "Esse horário foi liberado novamente porque o PIX não foi pago dentro do tempo."
+                    : canceladaSemSerPixExpirado
+                    ? "Essa reserva foi cancelada e não pode mais ser paga."
                     : "Escaneie o QR Code ou use o código copia e cola abaixo."}
                 </p>
 
@@ -684,8 +773,7 @@ export default function PagamentoPix() {
                       ✅ Pagamento aprovado
                     </h3>
                     <p style={styles.statusText}>
-                      Seu pagamento foi reconhecido e a sua reserva está
-                      concluída.
+                      Seu pagamento foi reconhecido e a sua reserva está concluída.
                     </p>
 
                     <div style={styles.actionsRow}>
@@ -728,6 +816,28 @@ export default function PagamentoPix() {
                       </Link>
                     </div>
                   </div>
+                ) : canceladaSemSerPixExpirado ? (
+                  <div style={styles.statusCanceledBox}>
+                    <h3 style={{ ...styles.statusTitle, color: "#334155" }}>
+                      🚫 Reserva cancelada
+                    </h3>
+                    <p style={styles.statusText}>
+                      Essa reserva foi cancelada e o pagamento não está mais disponível.
+                    </p>
+
+                    <div style={styles.actionsRow}>
+                      <Link
+                        to={quadraId ? `/quadra/${quadraId}` : "/"}
+                        style={styles.primaryBtn}
+                      >
+                        Voltar para quadra
+                      </Link>
+
+                      <Link to="/" style={styles.secondaryBtn}>
+                        Início
+                      </Link>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <div style={styles.statusPendingBox}>
@@ -736,8 +846,7 @@ export default function PagamentoPix() {
                       </h3>
 
                       <p style={styles.statusText}>
-                        Assim que o banco confirmar o PIX, essa tela muda
-                        automaticamente para sucesso.
+                        Assim que o banco confirmar o PIX, essa tela muda automaticamente para sucesso.
                       </p>
 
                       <p
@@ -781,8 +890,7 @@ export default function PagamentoPix() {
                         </div>
                       ) : (
                         <div style={styles.noteBox}>
-                          QR Code não retornou. Use o código copia e cola
-                          abaixo.
+                          QR Code não retornou. Use o código copia e cola abaixo.
                         </div>
                       )}
 
@@ -807,6 +915,8 @@ export default function PagamentoPix() {
                         <button
                           type="button"
                           onClick={async () => {
+                            if (!podeCopiarPix) return;
+
                             try {
                               await navigator.clipboard.writeText(
                                 String(reserva.pixCopiaECola ?? "")
@@ -820,11 +930,10 @@ export default function PagamentoPix() {
                           }}
                           style={{
                             ...styles.primaryBtn,
-                            opacity: tempoRestante <= 0 ? 0.6 : 1,
-                            cursor:
-                              tempoRestante <= 0 ? "not-allowed" : "pointer",
+                            opacity: podeCopiarPix ? 1 : 0.6,
+                            cursor: podeCopiarPix ? "pointer" : "not-allowed",
                           }}
-                          disabled={tempoRestante <= 0}
+                          disabled={!podeCopiarPix}
                         >
                           Copiar código PIX
                         </button>
@@ -887,10 +996,12 @@ export default function PagamentoPix() {
                       <div style={styles.summaryItem}>
                         <p style={styles.summaryLabel}>Status</p>
                         <p style={styles.summaryValue}>
-                          {expirado
-                            ? "PIX expirado"
-                            : pago
+                          {pago
                             ? "Pagamento confirmado"
+                            : expirado
+                            ? "PIX expirado"
+                            : canceladaSemSerPixExpirado
+                            ? "Reserva cancelada"
                             : "Aguardando pagamento"}
                         </p>
                       </div>

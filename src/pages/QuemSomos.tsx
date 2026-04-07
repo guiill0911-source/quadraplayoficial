@@ -81,7 +81,7 @@ const styles = {
 
   row: {
     display: "grid",
-    gridTemplateColumns: "1.2fr 0.8fr",
+    gridTemplateColumns: "1fr",
     gap: 18,
     marginTop: 24,
   } as const,

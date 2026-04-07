@@ -122,7 +122,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "18px 16px 40px",
   },
   hero: {
-    background: "linear-gradient(135deg, #111827, #1e293b)",
+    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
     color: "#fff",
     borderRadius: 26,
     padding: "28px 24px",

@@ -344,7 +344,7 @@ export default function Perfil() {
       <div style={styles.page}>
         <div style={styles.container}>
           <div style={styles.profileHeader}>
-            <h1 style={styles.title}>Meu Perfil</h1>
+            <h1 style={styles.title}>PERFIL TESTE 999</h1>
 
             <p style={styles.subtitle}>
               {data?.nome} {data?.sobrenome}
@@ -364,6 +364,16 @@ export default function Perfil() {
                 </p>
               </div>
             </div>
+
+            {!data?.emailVerificado && (
+              <div style={styles.emailWarning}>
+                ⚠️ Seu email ainda não foi verificado.
+
+                <div style={styles.emailWarningSub}>
+                  Verifique seu email para liberar reservas e pagamentos.
+                </div>
+              </div>
+            )}
 
             <div style={styles.configGrid}>
               <div style={styles.configBox}>
@@ -640,54 +650,58 @@ const styles = {
   },
 
   container: {
-    maxWidth: 1100,
+    maxWidth: 760,
     margin: "0 auto",
-    padding: "20px 16px",
+    padding: "14px 12px 88px",
   },
 
   profileHeader: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
 
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 900,
     margin: 0,
+    lineHeight: 1.1,
   },
 
   subtitle: {
-    margin: "8px 0 0",
+    margin: "6px 0 0",
     fontWeight: 700,
+    fontSize: 15,
   },
 
   email: {
     color: "#64748b",
-    fontSize: 14,
+    fontSize: 13,
   },
 
   card: {
     background: "#fff",
-    borderRadius: 24,
+    borderRadius: 18,
     border: "1px solid #e2e8f0",
-    padding: 18,
-    marginBottom: 18,
+    padding: 14,
+    marginBottom: 14,
+    boxShadow: "0 8px 24px rgba(15,23,42,0.04)",
   },
 
   sectionHead: {
-    marginBottom: 14,
+    marginBottom: 10,
   },
 
   sectionTitle: {
     margin: 0,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: 900,
+    lineHeight: 1.2,
   },
 
   helper: {
-    margin: "6px 0 0",
+    margin: "4px 0 0",
     color: "#64748b",
-    fontSize: 14,
-    lineHeight: 1.5,
+    fontSize: 13,
+    lineHeight: 1.45,
   },
 
   reputacaoTop: {
@@ -700,7 +714,7 @@ const styles = {
   },
 
   reputacaoScore: {
-    fontSize: 36,
+    fontSize: 30,
     fontWeight: 900,
     color: "#0f172a",
     lineHeight: 1,
@@ -708,7 +722,7 @@ const styles = {
 
   reputacaoHint: {
     marginTop: 6,
-    fontSize: 13,
+    fontSize: 12,
     color: "#64748b",
     fontWeight: 600,
   },
@@ -717,29 +731,29 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 40,
-    padding: "0 14px",
+    minHeight: 36,
+    padding: "0 12px",
     borderRadius: 999,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 900,
   },
 
   reputacaoGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: 12,
-    marginBottom: 14,
+    gridTemplateColumns: "1fr",
+    gap: 10,
+    marginBottom: 12,
   },
 
   reputacaoBox: {
-    borderRadius: 18,
+    borderRadius: 14,
     border: "1px solid #e2e8f0",
     background: "#f8fafc",
-    padding: 14,
+    padding: 12,
   },
 
   reputacaoLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#64748b",
     fontWeight: 800,
     textTransform: "uppercase" as const,
@@ -747,17 +761,17 @@ const styles = {
   },
 
   reputacaoValue: {
-    marginTop: 8,
-    fontSize: 18,
+    marginTop: 6,
+    fontSize: 16,
     fontWeight: 900,
     color: "#0f172a",
     lineHeight: 1.3,
   },
 
   reputacaoNote: {
-    borderRadius: 16,
-    padding: 14,
-    fontSize: 14,
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 13,
     fontWeight: 700,
     lineHeight: 1.5,
   },
@@ -776,24 +790,26 @@ const styles = {
 
   empty: {
     textAlign: "center" as const,
-    padding: 20,
+    padding: 18,
     color: "#64748b",
+    fontSize: 13,
   },
 
   grid: {
     display: "grid",
-    gap: 16,
+    gap: 12,
   },
 
   quadraCard: {
     border: "1px solid #e2e8f0",
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: "hidden",
+    background: "#fff",
   },
 
   imageWrap: {
     position: "relative" as const,
-    height: 160,
+    height: 140,
     overflow: "hidden",
   },
 
@@ -809,6 +825,8 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     background: "#f1f5f9",
+    fontSize: 13,
+    color: "#64748b",
   },
 
   heart: {
@@ -818,29 +836,35 @@ const styles = {
     background: "#fff",
     borderRadius: 999,
     padding: "6px 8px",
+    fontSize: 12,
   },
 
   cardBody: {
-    padding: 14,
+    padding: 12,
   },
 
   quadraNome: {
     margin: 0,
     fontWeight: 900,
+    fontSize: 16,
   },
 
   quadraCidade: {
     margin: "6px 0 0",
     color: "#64748b",
+    fontSize: 13,
   },
 
   quadraEndereco: {
     margin: "4px 0 10px",
-    fontSize: 13,
+    fontSize: 12,
     color: "#64748b",
+    lineHeight: 1.45,
   },
 
   btn: {
+    width: "100%",
+    minHeight: 42,
     border: "none",
     borderRadius: 12,
     background: "#16a34a",
@@ -852,35 +876,35 @@ const styles = {
 
   historyList: {
     display: "grid",
-    gap: 12,
+    gap: 10,
   },
 
   historyCard: {
-    borderRadius: 16,
+    borderRadius: 14,
     border: "1px solid #e2e8f0",
     background: "#fff",
-    padding: 14,
+    padding: 12,
     boxShadow: "0 8px 20px rgba(15,23,42,0.04)",
   },
 
   historyTop: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 10,
     alignItems: "flex-start",
     flexWrap: "wrap" as const,
-    marginBottom: 12,
+    marginBottom: 10,
   },
 
   historyTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: 900,
     color: "#0f172a",
     marginBottom: 4,
   },
 
   historySub: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#64748b",
     lineHeight: 1.45,
   },
@@ -889,21 +913,21 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     borderRadius: 999,
-    padding: "7px 10px",
-    fontSize: 12,
+    padding: "6px 9px",
+    fontSize: 11,
     fontWeight: 800,
   },
 
   historyBottom: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 12,
+    gap: 10,
     alignItems: "center",
     flexWrap: "wrap" as const,
   },
 
   historyValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 900,
     color: "#0f172a",
   },
@@ -912,14 +936,14 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 36,
+    minHeight: 34,
     padding: "0 12px",
-    borderRadius: 12,
+    borderRadius: 10,
     background: "#f8fafc",
     border: "1px solid #e2e8f0",
     color: "#0f172a",
     fontWeight: 800,
-    fontSize: 13,
+    fontSize: 12,
     textDecoration: "none",
   },
 
@@ -927,8 +951,9 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",
     marginTop: 4,
-    minHeight: 40,
+    minHeight: 42,
     padding: "0 14px",
     borderRadius: 12,
     background: "linear-gradient(135deg, #0f172a, #1d4ed8)",
@@ -941,20 +966,20 @@ const styles = {
 
   configGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: 12,
-    marginBottom: 14,
+    gridTemplateColumns: "1fr",
+    gap: 10,
+    marginBottom: 12,
   },
 
   configBox: {
-    borderRadius: 18,
+    borderRadius: 14,
     border: "1px solid #e2e8f0",
     background: "#f8fafc",
-    padding: 14,
+    padding: 12,
   },
 
   configLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#64748b",
     fontWeight: 800,
     textTransform: "uppercase" as const,
@@ -962,20 +987,21 @@ const styles = {
   },
 
   configValue: {
-    marginTop: 8,
-    fontSize: 15,
+    marginTop: 6,
+    fontSize: 14,
     fontWeight: 800,
     color: "#0f172a",
-    lineHeight: 1.4,
+    lineHeight: 1.35,
   },
 
   configActions: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap" as const,
+    display: "grid",
+    gap: 8,
   },
 
   configBtn: {
+    width: "100%",
+    minHeight: 44,
     border: "none",
     borderRadius: 12,
     background: "#0f172a",
@@ -986,6 +1012,8 @@ const styles = {
   },
 
   configBtnSecondary: {
+    width: "100%",
+    minHeight: 44,
     border: "1px solid #cbd5e1",
     borderRadius: 12,
     background: "#fff",
@@ -993,5 +1021,23 @@ const styles = {
     padding: "10px 14px",
     fontWeight: 800,
     cursor: "pointer",
+  },
+
+  emailWarning: {
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    background: "#fff7ed",
+    border: "1px solid #fdba74",
+    color: "#9a3412",
+    fontWeight: 800,
+    fontSize: 13,
+  },
+
+  emailWarningSub: {
+    marginTop: 4,
+    fontWeight: 600,
+    fontSize: 12,
+    color: "#7c2d12",
   },
 };

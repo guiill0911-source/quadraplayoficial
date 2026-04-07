@@ -229,7 +229,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "18px 16px 40px",
   },
   hero: {
-    background: "linear-gradient(135deg, #111827, #1e293b)",
+    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
     color: "#fff",
     borderRadius: 24,
     padding: "26px 24px",
@@ -336,16 +336,17 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
   },
   input: {
-    minHeight: 46,
-    borderRadius: 14,
-    border: "1px solid #cbd5e1",
-    padding: "0 14px",
-    background: "#fff",
-    color: "#0f172a",
-    fontSize: 15,
-    width: "100%",
-    boxSizing: "border-box",
-  },
+  minHeight: 48,
+  borderRadius: 16,
+  border: "1px solid #e2e8f0",
+  padding: "0 14px",
+  background: "#fff",
+  color: "#0f172a",
+  fontSize: 15,
+  width: "100%",
+  boxSizing: "border-box",
+  boxShadow: "0 2px 6px rgba(15,23,42,0.04)",
+},
   textarea: {
     minHeight: 110,
     borderRadius: 14,
@@ -792,7 +793,7 @@ export default function EditarQuadra() {
                 <div
                   style={{
                     ...styles.layout,
-                    gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+                    gridTemplateColumns: "1fr",
                   }}
                 >
                   <div style={styles.stack}>
@@ -834,7 +835,7 @@ export default function EditarQuadra() {
                         <div
                           style={{
                             display: "grid",
-                            gridTemplateColumns: "minmax(220px, 1fr) 140px",
+                            gridTemplateColumns: "1fr",
                             gap: 10,
                           }}
                         >

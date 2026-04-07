@@ -94,8 +94,8 @@ export default function AppRoutes() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro" element={<Cadastro />} />
+<Route path="/login" element={<Login />} />
+<Route path="/cadastro" element={<Cadastro />} />
         <Route path="/recuperar-senha" element={<RecuperarSenha />} />
         <Route path="/email-verificado" element={<EmailVerificado />} />
         <Route path="/termos" element={<Termos />} />
@@ -113,19 +113,19 @@ export default function AppRoutes() {
           }
         />
 
-    <Route path="/" element={<Home />} />
+    <Route path="/" element={<Navigate to="/home" replace />} />
     <Route path="/home" element={<Home />} />
 
-        <Route
-          path="/quadra/:id"
-          element={
-            <RequireAuth>
-              <RequireTerms>
-                <Quadra />
-              </RequireTerms>
-            </RequireAuth>
-          }
-        />
+       <Route
+  path="/quadra/:id"
+  element={
+    <RequireAuth>
+      <RequireTerms>
+        <Quadra />
+      </RequireTerms>
+    </RequireAuth>
+  }
+/>
 
         <Route
           path="/pagamento/pix"
@@ -159,6 +159,7 @@ export default function AppRoutes() {
             </RequireAuth>
           }
         />
+        
         <Route
   path="/dono/reservas"
   element={

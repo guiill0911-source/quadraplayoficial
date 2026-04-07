@@ -53,13 +53,14 @@ const styles = {
     maxWidth: 1100,
     margin: "0 auto",
     padding: "20px 16px 32px",
+    boxSizing: "border-box",
   } as const,
 
   hero: {
     position: "relative" as const,
     overflow: "hidden",
     borderRadius: 28,
-    padding: "28px 24px",
+    padding: "20px 16px",
     background:
       "linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)",
     color: "#fff",
@@ -104,7 +105,7 @@ const styles = {
 
   heroTitle: {
     margin: 0,
-    fontSize: "clamp(28px, 4vw, 42px)",
+    fontSize: "clamp(22px, 3.5vw, 28px)",
     lineHeight: 1.05,
     fontWeight: 900,
     letterSpacing: -0.6,
@@ -114,8 +115,8 @@ const styles = {
   heroText: {
     margin: "12px 0 0",
     maxWidth: 760,
-    fontSize: 15,
-    lineHeight: 1.6,
+    fontSize: 13,
+    lineHeight: 1.4,
     color: "rgba(255,255,255,0.92)",
   } as const,
 
@@ -130,11 +131,11 @@ const styles = {
     display: "inline-flex",
     alignItems: "center",
     gap: 8,
-    padding: "10px 14px",
+    padding: "6px 10px",
     borderRadius: 16,
     background: "rgba(255,255,255,0.14)",
     border: "1px solid rgba(255,255,255,0.18)",
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: 700,
   } as const,
 
@@ -223,7 +224,7 @@ const styles = {
 
   infoGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: 14,
   } as const,
 
@@ -246,7 +247,7 @@ const styles = {
 
   statValue: {
     margin: "10px 0 0",
-    fontSize: 28,
+    fontSize: 18,
     fontWeight: 900,
     lineHeight: 1.05,
     color: "#0f172a",
@@ -1028,7 +1029,13 @@ export default function MinhasReservas() {
 
       <div style={styles.page}>
         <div style={styles.container}>
-          <section style={styles.hero}>
+         <section
+  style={{
+    ...styles.hero,
+    margin: "0 auto",
+    maxWidth: 520,
+  }}
+>
             <div style={styles.heroGlow} />
             <div style={styles.heroGlow2} />
 
@@ -1102,7 +1109,13 @@ export default function MinhasReservas() {
 
           <section style={styles.block}>
             <div style={styles.infoGrid}>
-              <article style={styles.statCard}>
+              <article
+  style={{
+    ...styles.statCard,
+    background: "#f0fdf4",
+    border: "1px solid #86efac",
+  }}
+>
                 <p style={styles.statLabel}>Próxima reserva</p>
                 <p style={{ ...styles.statValue, color: "#16a34a" }}>
                   {proximaReserva ? "Agendada" : "Nenhuma"}
@@ -1224,7 +1237,7 @@ export default function MinhasReservas() {
                     {carregando ? "Atualizando..." : "Atualizar"}
                   </button>
 
-                  <Link to="/" style={{ textDecoration: "none" }}>
+                  <Link to="/home" style={{ textDecoration: "none" }}>
                     <button style={styles.neutralBtn}>Ir para Home</button>
                   </Link>
                 </div>

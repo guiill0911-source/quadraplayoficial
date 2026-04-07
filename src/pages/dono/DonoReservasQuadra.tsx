@@ -75,11 +75,13 @@ const styles = {
   } as const,
 
   container: {
-    width: "100%",
-    maxWidth: 1180,
-    margin: "0 auto",
-    padding: "20px 16px 32px",
-  } as const,
+  width: "100%",
+  maxWidth: 1180,
+  margin: "0 auto",
+  padding: "20px 16px 32px",
+  boxSizing: "border-box",
+  overflowX: "hidden",
+} as const,
 
   backLink: {
     display: "inline-flex",
@@ -176,7 +178,7 @@ const styles = {
 
   gridTop: {
     display: "grid",
-    gridTemplateColumns: "1.5fr 1fr",
+    gridTemplateColumns: "1fr",
     gap: 18,
     marginTop: 18,
   } as const,
@@ -378,11 +380,11 @@ const styles = {
   } as const,
 
   infoGrid: {
-    marginTop: 14,
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 12,
-  } as const,
+  marginTop: 14,
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 10,
+} as const,
 
   infoBox: {
     borderRadius: 18,
@@ -409,11 +411,11 @@ const styles = {
   } as const,
 
   actionGroup: {
-    marginTop: 16,
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap" as const,
-  } as const,
+  marginTop: 16,
+  display: "flex",
+  flexDirection: "column" as const,
+  gap: 10,
+} as const,
 
   emptyBox: {
     border: "1px dashed #cbd5e1",
@@ -1074,7 +1076,7 @@ console.log("RANKING:", rankingHorarios);
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "1fr 1fr 1fr",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
       gap: 16,
       marginTop: 10
     }}>
@@ -1231,43 +1233,6 @@ console.log("RANKING:", rankingHorarios);
                           </span>
                         ) : null}
 
-                        {isDev && (
-                          <>
-                            {pagamentoTipo === "online" && !pago && (
-                              <button
-                                onClick={() => onAprovarPixDEV(r)}
-                                disabled={travado}
-                                style={styles.darkGhostBtn}
-                              >
-                                {aprovandoPixDevId === r.id
-                                  ? "Aprovando..."
-                                  : "✅ Aprovar PIX (DEV)"}
-                              </button>
-                            )}
-
-                            {!pago ? (
-                              <button
-                                onClick={() => onMarcarPagoDEV(r)}
-                                disabled={travado}
-                                style={styles.neutralBtn}
-                              >
-                                {pagandoId === r.id
-                                  ? "Salvando..."
-                                  : "✅ Pago (DEV)"}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => onDesmarcarPagoDEV(r)}
-                                disabled={travado}
-                                style={styles.neutralBtn}
-                              >
-                                {pagandoId === r.id
-                                  ? "Salvando..."
-                                  : "↩︎ Pendente (DEV)"}
-                              </button>
-                            )}
-                          </>
-                        )}
 
                         {pagamentoTipo !== "online" && (
                           <>

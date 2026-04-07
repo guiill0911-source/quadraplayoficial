@@ -12,8 +12,6 @@ import {
 } from "../services/reputacao";
 import { db } from "../services/firebase";
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
-import { sendEmailVerification } from "firebase/auth";
-
 
 type Comodidades = {
   chuveiro?: boolean;
@@ -285,38 +283,6 @@ function scrollQuadras(direction: "left" | "right") {
   });
 }
 
-  async function reenviarEmailVerificacao() {
-  if (!user) return;
-
-  try {
-    await sendEmailVerification(user as any);
-    window.alert("Email de verificação reenviado com sucesso.");
-  } catch (e) {
-    console.error(e);
-    setErroBusca("Não consegui reenviar o email agora.");
-  }
-}
-
-async function validarEmailAgora(): Promise<boolean> {
-  if (!user) return false;
-
-  try {
-    await (user as any).reload();
-
-    if ((user as any).emailVerified) {
-      window.alert("Email verificado com sucesso!");
-      window.location.reload();
-      return true;
-    }
-
-    window.alert("Seu email ainda não foi verificado.");
-    return false;
-  } catch (e) {
-    console.error(e);
-    window.alert("Não consegui atualizar o status do email.");
-    return false;
-  }
-}
 
   useEffect(() => {
     async function carregar() {
@@ -825,96 +791,6 @@ if (score >= 90) {
     overflowX: "hidden",
   }}
 >
-          {user && !(user as any)?.emailVerified ? (
-  <div
-    style={{
-      marginTop: 12,
-      marginBottom: 16,
-      background: "linear-gradient(135deg, #fff7ed, #ffedd5)",
-      border: "1px solid #fdba74",
-      borderRadius: 20,
-      padding: "16px 18px",
-      boxShadow: "0 10px 24px rgba(249,115,22,0.10)",
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        gap: 14,
-        alignItems: "center",
-        flexWrap: "wrap",
-      }}
-    >
-      <div>
-        <div
-          style={{
-            fontSize: 14,
-            fontWeight: 900,
-            color: "#9a3412",
-            marginBottom: 6,
-          }}
-        >
-          ⚠️ Verifique seu email para liberar reservas e pagamentos
-        </div>
-
-        <div
-          style={{
-            fontSize: 13,
-            color: "#9a3412",
-            lineHeight: 1.6,
-            fontWeight: 600,
-          }}
-        >
-          Seu cadastro já foi criado. Falta confirmar seu email para liberar ações importantes no app.
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          flexWrap: "wrap",
-        }}
-      >
-        <button
-          type="button"
-          onClick={reenviarEmailVerificacao}
-          style={{
-            minHeight: 44,
-            padding: "0 16px",
-            borderRadius: 14,
-            border: "none",
-            background: "#f97316",
-            color: "#fff",
-            fontWeight: 900,
-            cursor: "pointer",
-            boxShadow: "0 8px 18px rgba(249,115,22,0.20)",
-          }}
-        >
-          Reenviar email
-        </button>
-
-        <button
-          type="button"
-          onClick={validarEmailAgora}
-          style={{
-            minHeight: 44,
-            padding: "0 16px",
-            borderRadius: 14,
-            border: "1px solid #fdba74",
-            background: "#fff",
-            color: "#c2410c",
-            fontWeight: 900,
-            cursor: "pointer",
-          }}
-        >
-          Já verifiquei
-        </button>
-      </div>
-    </div>
-  </div>
-) : null}
           <div
             style={{
               background: "linear-gradient(135deg, #0f2f63, #2563eb, #60a5fa)",
@@ -1952,7 +1828,7 @@ scrollbarWidth: "none",
                                   marginBottom: 14,
                                 }}
                               >
-                                {comodidades.slice(0, 4).map((c) => (
+                                  {comodidades.slice(0, 4).map((c) => (
                                   <span
                                     key={c}
                                     style={{

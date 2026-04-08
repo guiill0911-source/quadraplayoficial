@@ -585,6 +585,16 @@ export default function MinhasReservas() {
   const [cancelandoId, setCancelandoId] = useState<string>("");
   const [carregandoMulta, setCarregandoMulta] = useState(false);
 
+  const [confirmData, setConfirmData] = useState<{
+  mensagem: string;
+  onConfirm: () => Promise<void>;
+} | null>(null);
+
+const [toast, setToast] = useState<{
+  type: "success" | "error";
+  message: string;
+} | null>(null);
+
   const [contaStatus, setContaStatus] = useState<ContaStatus>({
     suspenso: false,
     suspensoAte: null,
@@ -766,28 +776,36 @@ export default function MinhasReservas() {
       ? `⚠️ Cancelamento de última hora\n\nCancelar este horário pode impactar sua reputação no app.\n\nTem certeza que deseja cancelar?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
       : `Cancelar reserva?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`;
 
-    const ok = window.confirm(msg);
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: msg,
+  onConfirm: async () => {
     try {
       setCancelandoId(r.id);
       setErro(null);
 
       await cancelarReserva({ reservaId: r.id });
 
-      alert(
-        ultimaHora
+      setToast({
+        type: "success",
+        message: ultimaHora
           ? "Reserva cancelada. Sua reputação pode ter sido impactada."
-          : "Reserva cancelada."
-      );
+          : "Reserva cancelada.",
+      });
 
       await carregar();
     } catch (e: any) {
       console.error(e);
-      alert(e?.message ?? "Erro ao cancelar. Veja o console.");
+      setToast({
+        type: "error",
+        message: e?.message ?? "Erro ao cancelar.",
+      });
     } finally {
       setCancelandoId("");
     }
+  },
+});
+
+    return;
   }
 
   function CardReserva({

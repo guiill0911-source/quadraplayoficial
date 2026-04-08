@@ -54,11 +54,12 @@ const styles = {
   } as CSSProperties,
 
   container: {
-    width: "100%",
-    maxWidth: 1120,
-    margin: "0 auto",
-    padding: "22px 16px 40px",
-  } as CSSProperties,
+  width: "100%",
+  maxWidth: 1120,
+  margin: "0 auto",
+  padding: "22px 16px 40px",
+  boxSizing: "border-box",
+} as CSSProperties,
 
   backLink: {
     display: "inline-flex",
@@ -397,9 +398,12 @@ export default function PagamentoPix() {
 
   const [loading, setLoading] = useState(true);
   const [reserva, setReserva] = useState<ReservaPix | null>(null);
+  const [copiado, setCopiado] = useState(false);
   const [quadraNomeExtra, setQuadraNomeExtra] = useState("");
   const [erro, setErro] = useState("");
+
   const [tempoRestante, setTempoRestante] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
 
   const autoRefreshQuandoZeraRef = useRef(false);
 
@@ -455,6 +459,17 @@ export default function PagamentoPix() {
       setErro("Erro ao atualizar pagamento.");
     }
   }
+
+useEffect(() => {
+  const onResize = () => {
+    setIsMobile(window.innerWidth <= 900);
+  };
+
+  onResize();
+  window.addEventListener("resize", onResize);
+
+  return () => window.removeEventListener("resize", onResize);
+}, []);
 
   useEffect(() => {
     if (!reservaId) {
@@ -740,9 +755,10 @@ export default function PagamentoPix() {
           <div
             style={{
               ...styles.grid,
-              gridTemplateColumns: pago
-                ? "1fr"
-                : "minmax(0, 1.05fr) minmax(340px, 0.95fr)",
+              gridTemplateColumns:
+  pago || isMobile
+    ? "1fr"
+    : "minmax(0, 1.05fr) minmax(340px, 0.95fr)",
             }}
           >
             <div style={styles.card}>
@@ -918,15 +934,18 @@ export default function PagamentoPix() {
                             if (!podeCopiarPix) return;
 
                             try {
-                              await navigator.clipboard.writeText(
-                                String(reserva.pixCopiaECola ?? "")
-                              );
-                              window.alert("Código PIX copiado.");
+                             await navigator.clipboard.writeText(
+  String(reserva.pixCopiaECola ?? "")
+);
+
+setCopiado(true);
+
+setTimeout(() => {
+  setCopiado(false);
+}, 2000);
                             } catch {
-                              window.alert(
-                                "Não consegui copiar. Copie manualmente."
-                              );
-                            }
+  setErro("Não consegui copiar. Copie manualmente.");
+}
                           }}
                           style={{
                             ...styles.primaryBtn,
@@ -935,7 +954,7 @@ export default function PagamentoPix() {
                           }}
                           disabled={!podeCopiarPix}
                         >
-                          Copiar código PIX
+                         {copiado ? "Copiado ✅" : "Copiar código PIX"}
                         </button>
 
                         <button
@@ -961,7 +980,12 @@ export default function PagamentoPix() {
                       Confira os dados antes de concluir o pagamento.
                     </p>
 
-                    <div style={styles.summaryGrid}>
+                    <div
+  style={{
+    ...styles.summaryGrid,
+    gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))",
+  }}
+>
                       <div style={styles.summaryItem}>
                         <p style={styles.summaryLabel}>Quadra</p>
                         <p style={styles.summaryValue}>{quadraNome}</p>

@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import SuspensaoBanner from "./SuspensaoBanner";
 import bg from "../assets/quadra-play-bg.png";
+import logo from "../assets/logo.png";
 
 type UserData = {
   nome?: string;
@@ -78,14 +79,9 @@ export default function Header() {
 
         <div style={styles.inner}>
           <div style={styles.left}>
-            <Link to="/home" style={styles.logoWrap}>
-              <span style={styles.logoBadge}>QP</span>
-
-              <div style={styles.logoTextWrap}>
-                <span style={styles.logo}>Quadra Play</span>
-                <div style={styles.tagline}>Seu jogo começa aqui</div>
-              </div>
-            </Link>
+<Link to="/home" style={styles.logoWrap}>
+  <img src={logo} alt="" style={styles.logoImage} />
+</Link>
           </div>
 
           <div style={styles.right}>
@@ -123,22 +119,24 @@ export default function Header() {
               </div>
             )}
 
-            {userData ? (
-              <span style={styles.user}>Olá, {userData.nome || "Usuário"}</span>
-            ) : null}
+            {userData && (
+              <span style={styles.user}>
+                Olá, {userData.nome || "Usuário"}
+              </span>
+            )}
 
-            {userData ? (
+            {userData && (
               <button onClick={handleLogout} style={styles.logout}>
                 Sair
               </button>
-            ) : null}
+            )}
           </div>
         </div>
       </header>
 
       {false && <SuspensaoBanner />}
 
-      {mostrarBottomNav ? (
+      {mostrarBottomNav && (
         <nav style={styles.bottomNav}>
           <Link
             to="/home"
@@ -177,7 +175,7 @@ export default function Header() {
             <span style={styles.bottomText}>Perfil</span>
           </Link>
         </nav>
-      ) : null}
+      )}
     </>
   );
 }
@@ -186,8 +184,9 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     position: "relative",
     width: "100%",
-    borderBottom: "1px solid rgba(30, 41, 59, 0.8)",
-    overflowX: "hidden"
+    borderBottom: "1px solid rgba(138, 232, 9, 0.18)",
+    overflowX: "hidden",
+    background: "#03122e",
   },
 
   bgImage: {
@@ -195,185 +194,150 @@ const styles: Record<string, React.CSSProperties> = {
     inset: 0,
     backgroundSize: "cover",
     backgroundPosition: "center",
-    opacity: 0.12,
+    opacity: 0.06,
   },
 
   overlay: {
     position: "absolute",
     inset: 0,
     background:
-      "linear-gradient(180deg, rgba(2,6,23,0.88) 0%, rgba(2,6,23,0.96) 100%)",
+      "linear-gradient(180deg, rgba(3,18,46,0.96) 0%, rgba(3,18,46,0.98) 100%)",
   },
 
   inner: {
-    position: "relative",
-    zIndex: 2,
-    maxWidth: "1280px",
-    margin: "0 auto",
-    padding: "10px 12px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
-  },
+  position: "relative",
+  zIndex: 2,
+  maxWidth: "1280px",
+  margin: "0 auto",
+  padding: "8px 12px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 8,
+  flexWrap: "nowrap",
+  minHeight: 64,
+},
 
   left: {
-    display: "flex",
-    alignItems: "center",
-    minWidth: 0,
-    flexShrink: 0,
-  },
+  display: "flex",
+  alignItems: "center",
+  flexShrink: 0,
+},
 
   right: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
-    justifyContent: "flex-end",
-    marginLeft: "auto",
-  },
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  marginLeft: "auto",
+  flexWrap: "nowrap",
+},
 
   logoWrap: {
     display: "flex",
     alignItems: "center",
     gap: 10,
     textDecoration: "none",
-    minWidth: 0,
   },
 
-  logoTextWrap: {
-    minWidth: 0,
-  },
+  logoImage: {
+  height: 52,
+  width: "auto",
+  display: "block",
+  objectFit: "contain",
+},
 
-  logoBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "linear-gradient(135deg, #2563eb, #0f172a)",
-    color: "#fff",
-    fontWeight: 900,
-    fontSize: 11,
-    flexShrink: 0,
-  },
+  logoTextWrap: {},
 
   logo: {
     fontWeight: 900,
-    fontSize: 17,
-    color: "#f8fafc",
-    letterSpacing: -0.3,
-    lineHeight: 1.05,
-    display: "block",
+    fontSize: 16,
+    color: "#ffffff",
   },
 
   tagline: {
     fontSize: 10,
-    color: "#60a5fa",
-    marginTop: 2,
-    lineHeight: 1.1,
+    color: "#8ae809",
+    fontWeight: 700,
   },
 
   ownerMenu: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    flexWrap: "wrap",
-  },
+  display: "flex",
+  alignItems: "center",
+  gap: 6,
+  marginRight: 4,
+},
 
   ownerLink: {
-    textDecoration: "none",
-    color: "#ecfdf5",
-    fontSize: 12,
-    fontWeight: 800,
-    padding: "6px 10px",
-    borderRadius: 10,
-    lineHeight: 1.1,
-    background: "linear-gradient(135deg, rgba(22,163,74,0.24), rgba(34,197,94,0.18))",
-    border: "1px solid rgba(74, 222, 128, 0.28)",
-    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
-    transition: "all 0.18s ease",
-  },
+  textDecoration: "none",
+  color: "#ffffff",
+  fontSize: 10,
+  fontWeight: 800,
+  padding: "5px 8px",
+  borderRadius: 9,
+  background: "rgba(138,232,9,0.10)",
+  border: "1px solid rgba(138,232,9,0.22)",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+},
 
   ownerLinkActive: {
-    background: "linear-gradient(135deg, rgba(22,163,74,0.42), rgba(34,197,94,0.30))",
-    color: "#ffffff",
-    border: "1px solid rgba(134, 239, 172, 0.42)",
+    background: "#8ae809",
+    color: "#03122e",
   },
 
   user: {
-    color: "#dbeafe",
-    fontWeight: 700,
-    fontSize: 12,
-    lineHeight: 1.1,
-    padding: "0 2px",
-    whiteSpace: "nowrap",
-  },
+  color: "#ffffff",
+  fontWeight: 700,
+  fontSize: 11,
+  whiteSpace: "nowrap",
+  marginLeft: 2,
+},
 
   logout: {
-    background: "linear-gradient(135deg, #ef4444, #dc2626)",
-    color: "#fff",
-    border: "none",
-    padding: "6px 11px",
-    borderRadius: 10,
-    fontWeight: 800,
-    fontSize: 12,
-    cursor: "pointer",
-    lineHeight: 1.1,
-    boxShadow: "0 8px 18px rgba(220,38,38,0.20)",
+  background: "#8ae809",
+  color: "#03122e",
+  border: "none",
+  padding: "5px 9px",
+  borderRadius: 9,
+  fontWeight: 800,
+  fontSize: 10,
+  cursor: "pointer",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+},
+
+  bottomNav: {
+    position: "fixed",
+    left: 12,
+    right: 12,
+    bottom: 8,
+    zIndex: 9999,
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: 6,
+    padding: "5px",
+    background: "rgba(3,18,46,0.96)",
+    borderRadius: 14,
   },
 
- bottomNav: {
-  position: "fixed",
-  left: 12,
-  right: 12,
-  bottom: 8,
-  zIndex: 9999,
-  display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: 6,
-  padding: "5px 6px calc(5px + env(safe-area-inset-bottom))",
-  background: "rgba(15, 23, 42, 0.96)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 14,
-  backdropFilter: "blur(14px)",
-  boxShadow: "0 6px 16px rgba(2,6,23,0.16)",
-  pointerEvents: "none",
-  maxWidth: 360,
-  margin: "0 auto",
-},
-
- bottomItem: {
-  minHeight: 34,
-  borderRadius: 10,
-  textDecoration: "none",
-  color: "#cbd5e1",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 1,
-  fontWeight: 700,
-  fontSize: 9,
-  lineHeight: 1,
-  pointerEvents: "auto",
-  padding: "2px 4px",
-},
+  bottomItem: {
+    textDecoration: "none",
+    color: "rgba(255,255,255,0.7)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    fontSize: 10,
+  },
 
   bottomItemActive: {
-    background: "rgba(37, 99, 235, 0.20)",
-    color: "#ffffff",
+    color: "#8ae809",
   },
 
   bottomIcon: {
-  fontSize: 12,
-  lineHeight: 1,
-},
+    fontSize: 14,
+  },
 
-bottomText: {
-  fontSize: 9,
-  lineHeight: 1,
-},
+  bottomText: {
+    fontSize: 10,
+  },
 };

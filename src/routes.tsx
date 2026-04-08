@@ -55,7 +55,7 @@ function WhatsAppButton() {
       style={{
         position: "fixed",
         right: 12,
-        bottom: 12,
+        bottom: 74,
         width: 28,
         height: 28,
         borderRadius: "50%",
@@ -113,8 +113,18 @@ export default function AppRoutes() {
           }
         />
 
-    <Route path="/" element={<Navigate to="/home" replace />} />
-    <Route path="/home" element={<Home />} />
+<Route path="/" element={<Navigate to="/login" replace />} />
+
+<Route
+  path="/home"
+  element={
+    <RequireAuth>
+      <RequireTerms>
+        <Home />
+      </RequireTerms>
+    </RequireAuth>
+  }
+/>
 
        <Route
   path="/quadra/:id"

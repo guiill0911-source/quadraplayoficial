@@ -17,7 +17,7 @@ const styles = {
     width: "100%",
     maxWidth: 1160,
     display: "grid",
-    gridTemplateColumns: "1.02fr 0.98fr",
+    gridTemplateColumns: window.innerWidth < 768 ? "1fr" : "1.02fr 0.98fr",
     gap: 24,
     alignItems: "stretch",
   } as const,
@@ -259,16 +259,16 @@ const styles = {
   } as const,
 
   helperBox: {
-    marginTop: 16,
-    border: "1px solid #dbeafe",
-    background: "#eff6ff",
-    color: "#1e3a8a",
-    borderRadius: 16,
-    padding: 12,
-    fontSize: 14,
-    lineHeight: 1.55,
-    fontWeight: 700,
-  } as const,
+  marginTop: 14,
+  border: "1px solid #e0e7ff",
+  background: "#f8fafc",
+  color: "#334155",
+  borderRadius: 14,
+  padding: 10,
+  fontSize: 13,
+  lineHeight: 1.5,
+  fontWeight: 600,
+}as const,
 
   infoBox: {
     marginTop: 16,
@@ -524,7 +524,8 @@ export default function Cadastro() {
   return (
     <div style={styles.page}>
       <div style={styles.shell}>
-        <section style={styles.hero}>
+        {window.innerWidth >= 768 && (
+  <section style={styles.hero}>
           <div style={styles.heroGlow} />
           <div style={styles.heroGlow2} />
 
@@ -570,6 +571,7 @@ export default function Cadastro() {
             em uma experiência muito mais moderna.
           </div>
         </section>
+)}
 
         <section style={styles.cardWrap}>
           <div style={styles.card}>

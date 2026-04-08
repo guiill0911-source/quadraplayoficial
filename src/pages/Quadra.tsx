@@ -25,6 +25,7 @@ import {
 } from "../services/avaliacoes";
 
 import { verifyAndBindCpf } from "../services/cpf";
+import ConfirmModal from "../components/ConfirmModal";
 
 /* =======================
    TIPOS
@@ -796,6 +797,16 @@ export default function Quadra() {
 
   const [slotPendente, setSlotPendente] = useState<SlotDisponibilidade | null>(null);
 
+  const [confirmData, setConfirmData] = useState<{
+  mensagem: string;
+  onConfirm: () => Promise<void>;
+} | null>(null);
+
+const [toastInfo, setToastInfo] = useState<{
+  type: "success" | "error";
+  message: string;
+} | null>(null);
+
   const [bloqueioInfo, setBloqueioInfo] = useState<{
     suspenso: boolean;
     ateMs: number | null;
@@ -819,10 +830,10 @@ export default function Quadra() {
 
     try {
       await sendEmailVerification(currentUser);
-      window.alert("Email de verificação reenviado.");
+      showToast("✉️ Email de verificação reenviado.", TOAST_MS);
     } catch (e) {
       console.error(e);
-      window.alert("Não consegui reenviar o email agora.");
+      setErroReserva("Não consegui reenviar o email agora.");
     }
   }
 
@@ -1307,17 +1318,15 @@ export default function Quadra() {
       }
     }
 
-    const ok = window.confirm(
-      `Confirmar reserva?\n\n` +
-        `Data: ${dataReserva}\n` +
-        `Horário: ${slot.horaInicio}–${slot.horaFim}\n` +
-        `Esporte: ${ESPORTES_LABELS[slot.esporte] ?? slot.esporte}\n` +
-        `Valor: ${formatBRL(slot.valor)}\n` +
-        `Pagamento: ${pagamentoTipo === "pix" ? "via PIX" : "presencial na quadra"}`
-    );
-
-    if (!ok) return;
-
+setConfirmData({
+  mensagem:
+    `Confirmar reserva?\n\n` +
+    `Data: ${dataReserva}\n` +
+    `Horário: ${slot.horaInicio}–${slot.horaFim}\n` +
+    `Esporte: ${ESPORTES_LABELS[slot.esporte] ?? slot.esporte}\n` +
+    `Valor: ${formatBRL(slot.valor)}\n` +
+    `Pagamento: ${pagamentoTipo === "pix" ? "via PIX" : "presencial na quadra"}`,
+  onConfirm: async () => {
     try {
       setReservandoId(slot.id);
 
@@ -1344,6 +1353,8 @@ export default function Quadra() {
           throw new Error("Falha interna: reserveAndCreatePix não retornou reservaId.");
         }
 
+        setConfirmData(null);
+
         navigate(
           `/pagamento/pix?reservaId=${encodeURIComponent(reservaId)}&quadraId=${encodeURIComponent(
             id ?? ""
@@ -1363,6 +1374,7 @@ export default function Quadra() {
         "A reserva demorou demais para responder (rede). Tente novamente."
       );
 
+      setConfirmData(null);
       showToast("✅ Horário reservado com sucesso!", TOAST_MS);
       setSlots((s) => s.filter((x) => x.id !== slot.id));
     } catch (e: any) {
@@ -1372,8 +1384,11 @@ export default function Quadra() {
       setCriandoPix(false);
       setReservandoId("");
     }
-  }
+  },
+});
 
+return;
+  }
   async function enviarAvaliacao() {
     setErroAvaliacao("");
     setMsgAvaliacao("");
@@ -1501,7 +1516,7 @@ export default function Quadra() {
       )}
 
       <div style={styles.container}>
-        <Link to="/" style={styles.topLink}>
+        <Link to="/home" style={styles.topLink}>
           ← Voltar
         </Link>
 
@@ -2170,6 +2185,22 @@ export default function Quadra() {
             </div>
           </div>
         ) : null}
+        <ConfirmModal
+  open={!!confirmData}
+  title="Confirmar reserva"
+  message={confirmData?.mensagem ?? ""}
+  confirmText={criandoPix || !!reservandoId ? "Processando..." : "Confirmar reserva"}
+  cancelText="Cancelar"
+  loading={criandoPix || !!reservandoId}
+  onCancel={() => {
+    if (criandoPix || reservandoId) return;
+    setConfirmData(null);
+  }}
+  onConfirm={async () => {
+    if (!confirmData) return;
+    await confirmData.onConfirm();
+  }}
+/>
       </div>
     </div>
   );

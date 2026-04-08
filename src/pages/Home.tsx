@@ -1158,11 +1158,41 @@ if (score >= 90) {
                 marginTop: 18,
                 padding: 18,
                 borderRadius: 22,
-                background: "linear-gradient(180deg, #f8fafc, #f1f5f9)",
-                border: "1px solid #e2e8f0",
-                boxShadow: "inset 0 1px 2px rgba(15,23,42,0.05)",
+                background: "linear-gradient(180deg, #ffffff, #eef4ff)",  
+                border: "1px solid rgba(0, 224, 255, 0.08)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                position: "relative",
               }}
             >
+
+{/* FADE ESQUERDA */}
+<div
+  style={{
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 24,
+    background: "linear-gradient(to right, #ffffff, transparent)",
+    zIndex: 2,
+    pointerEvents: "none",
+  }}
+/>
+
+{/* FADE DIREITA */}
+<div
+  style={{
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 24,
+    background: "linear-gradient(to left, #ffffff, transparent)",
+    zIndex: 2,
+    pointerEvents: "none",
+  }}
+/>
+
               <div
                 style={{
                   fontSize: 13,
@@ -1183,10 +1213,10 @@ if (score >= 90) {
     overflowX: "auto",
     paddingBottom: 6,
     whiteSpace: "nowrap",
+    paddingLeft: 16,
+paddingRight: 16,
 flex: "0 0 auto",
 scrollSnapAlign: "start",
-paddingLeft: 4,
-paddingRight: 4,
 scrollbarWidth: "none",
     scrollSnapType: "x mandatory",
     WebkitOverflowScrolling: "touch",
@@ -1211,21 +1241,36 @@ scrollbarWidth: "none",
 }
 }}
                       style={{
-                        padding: "10px 14px",
-                        borderRadius: 999,
-                        border: ativo ? "1px solid #22c55e" : "1px solid #e2e8f0",
-                        background: ativo
-                          ? "linear-gradient(135deg, #22c55e, #16a34a)"
-                          : "#ffffff",
-                        color: ativo ? "#ffffff" : "#334155",
-                        fontWeight: 800,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        boxShadow: ativo
-                          ? "0 6px 14px rgba(34,197,94,0.35)"
-                          : "0 2px 6px rgba(15,23,42,0.08)",
-                        transition: "all 0.2s ease",
-                      }}
+  padding: "10px 16px",
+  borderRadius: 999,
+  border: ativo 
+  ? "1px solid #00e0ff" 
+  : "1px solid rgba(0,224,255,0.15)",
+  background: ativo
+    ? "linear-gradient(135deg, #00e0ff, #2563eb, #1e40af)"
+    : "linear-gradient(135deg, #ffffff, #f1f5ff)",
+  color: ativo ? "#fff" : "#0f172a",
+  fontWeight: 700,
+  fontSize: 13,
+  cursor: "pointer",
+  boxShadow: ativo
+    ? "0 6px 18px rgba(37,99,235,0.35)"
+    : "0 8px 22px rgba(37,99,235,0.45)",
+  transition: "all 0.2s ease",
+}}
+
+onMouseEnter={(e) => {
+  if (!ativo) {
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+  }
+}}
+onMouseLeave={(e) => {
+  if (!ativo) {
+    e.currentTarget.style.transform = "translateY(0px)";
+    e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
+  }
+}}
                     >
                       {label}
                     </button>
@@ -1554,340 +1599,357 @@ scrollbarWidth: "none",
       scrollSnapType: "x proximity",
     }}
   >
-                  {quadrasOrdenadas.map((q) => {
-                    const disponivelHoje = quadrasDisponiveisHoje
-                      ? quadrasDisponiveisHoje.has(q.id)
-                      : null;
+               {quadrasOrdenadas.map((q) => {
+  const disponivelHoje = quadrasDisponiveisHoje
+    ? quadrasDisponiveisHoje.has(q.id)
+    : null;
 
-                    const distTxt = formatDistance(userLoc, q);
-                    const precoInicial = menoresValores[q.id] ?? getStartingPrice(q);
-                    const comodidades = chipComodidades(q);
-                    const esportes = (q.esportes ?? q.tipos ?? []).slice(0, 3);
-                    const favorita = favoritasIds.includes(q.id);
-                    const favoritaSalvando = favoritaSavingId === q.id;
-                    const isHovered = hoveredQuadraId === q.id;
+  const distTxt = formatDistance(userLoc, q);
+  const precoInicial = menoresValores[q.id] ?? getStartingPrice(q);
+  const comodidades = chipComodidades(q);
+  const esportes = (q.esportes ?? q.tipos ?? []).slice(0, 3);
+  const favorita = favoritasIds.includes(q.id);
+  const favoritaSalvando = favoritaSavingId === q.id;
+  const isHovered = hoveredQuadraId === q.id;
 
-                    return (
-                      <Link
-  key={q.id}
-  to={`/quadra/${q.id}`}
-  style={{
-    textDecoration: "none",
-    color: "inherit",
-    minWidth: 252,
-    maxWidth: 272,
-    flex: "0 0 272px",
-    scrollSnapAlign: "start",
-  }}
->
-                        <div
-                          onMouseEnter={() => setHoveredQuadraId(q.id)}
-                          onMouseLeave={() => setHoveredQuadraId(null)}
-                          style={{
-                            background: "#fff",
-                            borderRadius: 22,
-                            overflow: "hidden",
-                            border: isHovered ? "1px solid #bfdbfe" : "1px solid #e5e7eb",
-                            boxShadow: isHovered
-                              ? "0 24px 50px rgba(15,23,42,0.16)"
-                              : "0 12px 32px rgba(15,23,42,0.08)",
-                            transition:
-                              "transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border 0.22s ease",
-                            transform: isHovered ? "scale(1.035)" : "scale(1)",
-                            height: "100%",
-                            minHeight: 100,
-                            willChange: "transform, box-shadow",
-                          }}
-                        >
-                          <div
-                            style={{
-                              position: "relative",
-                              height: 200,
-                              background: "linear-gradient(135deg, #1d4ed8, #7c3aed)",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {q.fotoCapaUrl ? (
-                              <img
-                                src={q.fotoCapaUrl}
-                                alt={`Capa ${q.nome}`}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                  display: "block",
-                                  transform: isHovered ? "scale(1.05)" : "scale(1)",
-                                  transition:
-                                    "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-                                }}
-                              />
-                            ) : null}
+  return (
+    <Link
+      key={q.id}
+      to={`/quadra/${q.id}`}
+      style={{
+        textDecoration: "none",
+        color: "inherit",
+        minWidth: 252,
+        maxWidth: 272,
+        flex: "0 0 272px",
+        scrollSnapAlign: "start",
+      }}
+    >
+      <div
+        onMouseEnter={() => setHoveredQuadraId(q.id)}
+        onMouseLeave={() => setHoveredQuadraId(null)}
+        style={{
+          background: "#fff",
+          borderRadius: 22,
+          overflow: "hidden",
+          border: isHovered ? "1px solid #bfdbfe" : "1px solid #e5e7eb",
+          boxShadow: isHovered
+            ? "0 20px 42px rgba(15,23,42,0.14)"
+            : "0 10px 24px rgba(15,23,42,0.08)",
+          transition:
+            "transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border 0.22s ease",
+          transform: isHovered ? "scale(1.02)" : "scale(1)",
+          height: "100%",
+          minHeight: 100,
+          willChange: "transform, box-shadow",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            height: 188,
+            background: "linear-gradient(135deg, #1d4ed8, #7c3aed)",
+            overflow: "hidden",
+          }}
+        >
+          {q.fotoCapaUrl ? (
+            <img
+              src={q.fotoCapaUrl}
+              alt={`Capa ${q.nome}`}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                display: "block",
+                transform: isHovered ? "scale(1.04)" : "scale(1)",
+                transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            />
+          ) : null}
 
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                background:
-                                  "linear-gradient(to top, rgba(15,23,42,0.72), rgba(15,23,42,0.16))",
-                              }}
-                            />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(to top, rgba(15,23,42,0.76), rgba(15,23,42,0.14))",
+            }}
+          />
 
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                background: isHovered
-                                  ? "linear-gradient(to top, rgba(29,78,216,0.16), rgba(255,255,255,0.03))"
-                                  : "transparent",
-                                transition: "background 0.22s ease",
-                              }}
-                            />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: isHovered
+                ? "linear-gradient(to top, rgba(29,78,216,0.14), rgba(255,255,255,0.02))"
+                : "transparent",
+              transition: "background 0.22s ease",
+            }}
+          />
 
-                            <div
-                              style={{
-                                position: "absolute",
-                                left: 14,
-                                right: 14,
-                                top: 14,
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 8,
-                                flexWrap: "wrap",
-                                alignItems: "flex-start",
-                              }}
-                            >
-                              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                                {precoInicial != null ? (
-                                  <span
-                                    style={{
-                                      background: "rgba(255,255,255,0.92)",
-                                      color: "#0f172a",
-                                      borderRadius: 999,
-                                      padding: "8px 12px",
-                                      fontSize: 13,
-                                      fontWeight: 900,
-                                    }}
-                                  >
-                                    A partir de {formatBRL(precoInicial)}
-                                  </span>
-                                ) : (
-                                  <span
-                                    style={{
-                                      background: "rgba(255,255,255,0.92)",
-                                      color: "#0f172a",
-                                      borderRadius: 999,
-                                      padding: "8px 12px",
-                                      fontSize: 13,
-                                      fontWeight: 900,
-                                    }}
-                                  >
-                                    Consultar preço
-                                  </span>
-                                )}
+          <div
+            style={{
+              position: "absolute",
+              left: 10,
+              right: 10,
+              top: 10,
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 6,
+              flexWrap: "wrap",
+              alignItems: "flex-start",
+            }}
+          >
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {precoInicial != null ? (
+                <span
+                  style={{
+                    background: "rgba(255,255,255,0.94)",
+                    color: "#0f172a",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  A partir de {formatBRL(precoInicial)}
+                </span>
+              ) : (
+                <span
+                  style={{
+                    background: "rgba(255,255,255,0.94)",
+                    color: "#0f172a",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  Consultar preço
+                </span>
+              )}
 
-                                {disponivelHoje === null ? null : (
-                                  <span
-                                    style={{
-                                      background: disponivelHoje
-                                        ? "rgba(220,252,231,0.95)"
-                                        : "rgba(255,255,255,0.92)",
-                                      color: disponivelHoje ? "#166534" : "#475569",
-                                      borderRadius: 999,
-                                      padding: "8px 12px",
-                                      fontSize: 12,
-                                      fontWeight: 900,
-                                    }}
-                                  >
-                                    {disponivelHoje ? "Disponível hoje" : "Sem horários hoje"}
-                                  </span>
-                                )}
-                              </div>
+              {disponivelHoje === null ? null : (
+                <span
+                  style={{
+                    background: disponivelHoje
+                      ? "rgba(220,252,231,0.95)"
+                      : "rgba(255,255,255,0.94)",
+                    color: disponivelHoje ? "#166534" : "#475569",
+                    borderRadius: 999,
+                    padding: "6px 10px",
+                    fontSize: 10,
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  {disponivelHoje ? "Disponível hoje" : "Sem horários hoje"}
+                </span>
+              )}
+            </div>
 
-                              <button
-                                type="button"
-                                onClick={(e) => toggleFavorita(e, q.id)}
-                                disabled={favoritaSalvando}
-                                aria-label={
-                                  favorita ? "Remover dos favoritos" : "Adicionar aos favoritos"
-                                }
-                                title={
-                                  favorita ? "Remover dos favoritos" : "Adicionar aos favoritos"
-                                }
-                                style={{
-                                  width: 44,
-                                  height: 44,
-                                  borderRadius: 999,
-                                  border: favorita
-                                    ? "1px solid rgba(251,113,133,0.45)"
-                                    : "1px solid rgba(255,255,255,0.4)",
-                                  background: favorita
-                                    ? "rgba(255,241,242,0.96)"
-                                    : "rgba(255,255,255,0.92)",
-                                  color: favorita ? "#e11d48" : "#334155",
-                                  fontSize: 21,
-                                  fontWeight: 900,
-                                  cursor: favoritaSalvando ? "wait" : "pointer",
-                                  boxShadow: "0 10px 24px rgba(15,23,42,0.18)",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  backdropFilter: "blur(6px)",
-                                  transform: isHovered ? "scale(1.06)" : "scale(1)",
-                                  transition: "transform 0.18s ease",
-                                }}
-                              >
-                                {favorita ? "♥" : "♡"}
-                              </button>
-                            </div>
+            <button
+              type="button"
+              onClick={(e) => toggleFavorita(e, q.id)}
+              disabled={favoritaSalvando}
+              aria-label={
+                favorita ? "Remover dos favoritos" : "Adicionar aos favoritos"
+              }
+              title={
+                favorita ? "Remover dos favoritos" : "Adicionar aos favoritos"
+              }
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 999,
+                border: favorita
+                  ? "1px solid rgba(251,113,133,0.38)"
+                  : "1px solid rgba(255,255,255,0.32)",
+                background: favorita
+                  ? "rgba(255,241,242,0.96)"
+                  : "rgba(255,255,255,0.92)",
+                color: favorita ? "#e11d48" : "#334155",
+                fontSize: 12,
+                fontWeight: 900,
+                cursor: favoritaSalvando ? "wait" : "pointer",
+                boxShadow: "0 6px 14px rgba(15,23,42,0.14)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backdropFilter: "blur(6px)",
+                transform: isHovered ? "scale(1.04)" : "scale(1)",
+                transition: "transform 0.18s ease",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              {favorita ? "♥" : "♡"}
+            </button>
+          </div>
 
-                            <div
-                              style={{
-                                position: "absolute",
-                                left: 16,
-                                right: 16,
-                                bottom: 16,
-                                color: "#fff",
-                              }}
-                            >
-                              <div style={{ fontSize: 22, fontWeight: 900, lineHeight: 1.1 }}>
-                                {q.nome}
-                              </div>
-                              <div
-                                style={{
-                                  marginTop: 6,
-                                  fontSize: 14,
-                                  color: "#e2e8f0",
-                                  display: "flex",
-                                  gap: 8,
-                                  flexWrap: "wrap",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <span>{q.cidade}</span>
-                                {distTxt ? (
-                                  <span>• 📍 {distTxt}</span>
-                                ) : userLoc ? (
-                                  <span>• localização indisponível</span>
-                                ) : null}
-                              </div>
-                            </div>
-                          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 12,
+              right: 12,
+              bottom: 12,
+              color: "#fff",
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.1 }}>
+              {q.nome}
+            </div>
 
-                          <div style={{ padding: 16 }}>
-                            {q.endereco ? (
-                              <div
-                                style={{
-                                  color: "#64748b",
-                                  fontSize: 14,
-                                  lineHeight: 1.5,
-                                  marginBottom: 12,
-                                }}
-                              >
-                                {q.endereco}
-                              </div>
-                            ) : null}
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 11,
+                color: "#e2e8f0",
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+                alignItems: "center",
+                lineHeight: 1.2,
+              }}
+            >
+              <span>{q.cidade}</span>
+              {distTxt ? (
+                <span>• 📍 {distTxt}</span>
+              ) : userLoc ? (
+                <span>• localização indisponível</span>
+              ) : null}
+            </div>
+          </div>
+        </div>
 
-                            {esportes.length > 0 ? (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 8,
-                                  flexWrap: "wrap",
-                                  marginBottom: 12,
-                                }}
-                              >
-                                {esportes.map((esp) => {
-                                  const label =
-                                    ESPORTES_OPCOES.find((x) => x.id === esp)?.label ?? esp;
-                                  return (
-                                    <span
-                                      key={esp}
-                                      style={{
-                                        padding: "7px 10px",
-                                        borderRadius: 999,
-                                        background: "#eff6ff",
-                                        color: "#1d4ed8",
-                                        fontSize: 12,
-                                        fontWeight: 800,
-                                        border: "1px solid #bfdbfe",
-                                      }}
-                                    >
-                                      {label}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            ) : null}
+        <div style={{ padding: 12 }}>
+          {q.endereco ? (
+            <div
+              style={{
+                color: "#64748b",
+                fontSize: 11,
+                lineHeight: 1.4,
+                marginBottom: 10,
+              }}
+            >
+              {q.endereco}
+            </div>
+          ) : null}
 
-                            {comodidades.length > 0 ? (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  gap: 8,
-                                  flexWrap: "wrap",
-                                  marginBottom: 14,
-                                }}
-                              >
-                                  {comodidades.slice(0, 4).map((c) => (
-                                  <span
-                                    key={c}
-                                    style={{
-                                      padding: "7px 10px",
-                                      borderRadius: 999,
-                                      background: "#f8fafc",
-                                      color: "#334155",
-                                      fontSize: 12,
-                                      fontWeight: 700,
-                                      border: "1px solid #e2e8f0",
-                                    }}
-                                  >
-                                    {c}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
+          {esportes.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+                marginBottom: 10,
+              }}
+            >
+              {esportes.map((esp) => {
+                const label =
+                  ESPORTES_OPCOES.find((x) => x.id === esp)?.label ?? esp;
 
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                gap: 12,
-                                alignItems: "center",
-                                flexWrap: "wrap",
-                                marginTop: 6,
-                              }}
-                            >
-                              <div style={{ color: "#64748b", fontSize: 13, fontWeight: 700 }}>
-                                Toque para ver horários e reservar
-                              </div>
+                return (
+                  <span
+                    key={esp}
+                    style={{
+                      padding: "5px 8px",
+                      borderRadius: 999,
+                      background: "#eff6ff",
+                      color: "#1d4ed8",
+                      fontSize: 10,
+                      fontWeight: 800,
+                      border: "1px solid #bfdbfe",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
 
-                              <div
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  minHeight: 42,
-                                  padding: "0 16px",
-                                  borderRadius: 14,
-                                  background: "linear-gradient(135deg, #10b981, #059669)",
-                                  color: "#fff",
-                                  fontWeight: 900,
-                                  boxShadow: isHovered
-                                    ? "0 14px 28px rgba(16,185,129,0.26)"
-                                    : "0 10px 20px rgba(16,185,129,0.18)",
-                                  transform: isHovered ? "scale(1.03)" : "scale(1)",
-                                  transition:
-                                    "transform 0.18s ease, box-shadow 0.18s ease",
-                                }}
-                              >
-                                Ver quadra
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+          {comodidades.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+                marginBottom: 10,
+              }}
+            >
+              {comodidades.slice(0, 4).map((c) => (
+                <span
+                  key={c}
+                  style={{
+                    padding: "5px 8px",
+                    borderRadius: 999,
+                    background: "#f8fafc",
+                    color: "#334155",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    border: "1px solid #e2e8f0",
+                    lineHeight: 1,
+                  }}
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 8,
+              alignItems: "center",
+              flexWrap: "wrap",
+              marginTop: 2,
+            }}
+          >
+            <div
+              style={{
+                color: "#64748b",
+                fontSize: 10,
+                fontWeight: 700,
+                lineHeight: 1.2,
+              }}
+            >
+              Toque para ver horários
+            </div>
+
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 32,
+                padding: "0 12px",
+                borderRadius: 12,
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                color: "#fff",
+                fontWeight: 900,
+                fontSize: 11,
+                boxShadow: isHovered
+                  ? "0 10px 18px rgba(16,185,129,0.22)"
+                  : "0 6px 14px rgba(16,185,129,0.16)",
+                transform: isHovered ? "scale(1.02)" : "scale(1)",
+                transition: "transform 0.18s ease, box-shadow 0.18s ease",
+                lineHeight: 1,
+              }}
+            >
+              Ver quadra
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+})}
                 </div>
 
                 <button

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Header from "../../components/Header";
+import ConfirmModal from "../../components/ConfirmModal";
 import { useAuth } from "../../services/authContext";
 import { gerarDisponibilidadesParaData } from "../../services/disponibilidades";
 import {
@@ -620,6 +621,11 @@ export default function GerenciarHorariosMes() {
   const [excecoes, setExcecoes] = useState<Record<string, any>>({});
   const [gerandoMes, setGerandoMes] = useState(false);
 
+  const [confirmData, setConfirmData] = useState<{
+  mensagem: string;
+  onConfirm: () => Promise<void>;
+} | null>(null);
+
   const [ano, mesNum] = mes.split("-").map((x) => Number(x));
   const monthIndex0 = (mesNum || 1) - 1;
 
@@ -916,13 +922,12 @@ export default function GerenciarHorariosMes() {
     if (!id) return;
     if (semPermissao) return;
 
-    const ok = window.confirm(
-      `Gerar horários para TODOS os dias deste mês (${mes})?\n\n` +
-        `Dias passados serão ignorados.\n` +
-        `Se um dia estiver FECHADO (por funcionamento/exceção), ele não cria horários.`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem:
+    `Gerar horários para TODOS os dias deste mês (${mes})?\n\n` +
+    `Dias passados serão ignorados.\n` +
+    `Se um dia estiver FECHADO (por funcionamento/exceção), ele não cria horários.`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg(null);
@@ -969,18 +974,21 @@ export default function GerenciarHorariosMes() {
       setGerandoMes(false);
       setTrabalhandoDia("");
     }
+  },
+});
+
+return;
   }
 
   async function zerarDia(data: string) {
     if (!id || !user?.uid) return;
 
-    const ok = window.confirm(
-      `Zerar horários do dia (${data})?\n\n` +
-        `Isso vai REMOVER todos os slots do dia que NÃO estão reservados.\n` +
-        `Slots com reserva serão mantidos.`
-    );
-    if (!ok) return;
-
+setConfirmData({
+  mensagem:
+    `Zerar horários do dia (${data})?\n\n` +
+    `Isso vai REMOVER todos os slots do dia que NÃO estão reservados.\n` +
+    `Slots com reserva serão mantidos.`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg(null);
@@ -1019,18 +1027,21 @@ export default function GerenciarHorariosMes() {
     } finally {
       setTrabalhandoDia("");
     }
+  },
+});
+
+return;
   }
 
   async function zerarMesAtual() {
     if (!id || !user?.uid) return;
 
-    const ok = window.confirm(
-      `Zerar TODOS os horários deste mês (${mes})?\n\n` +
-        `Isso vai REMOVER todos os slots do mês que NÃO estão reservados.\n` +
-        `Slots com reserva serão mantidos.`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem:
+    `Zerar TODOS os horários deste mês (${mes})?\n\n` +
+    `Isso vai REMOVER todos os slots do mês que NÃO estão reservados.\n` +
+    `Slots com reserva serão mantidos.`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg(null);
@@ -1066,16 +1077,19 @@ export default function GerenciarHorariosMes() {
     } finally {
       setZerandoMes(false);
     }
+  },
+});
+
+return;
   }
 
   async function bloquearDia(data: string) {
     if (!id || !user?.uid) return;
 
-    const ok = window.confirm(
-      `Bloquear o dia inteiro (${data})?\n\nIsso desativa TODOS os horários ATIVOS do dia.\n(Reservas já feitas não são alteradas.)`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem:
+    `Bloquear o dia inteiro (${data})?\n\nIsso desativa TODOS os horários ATIVOS do dia.\n(Reservas já feitas não são alteradas.)`,
+  onConfirm: async () => {
     try {
       setMsg(null);
       setErro(null);
@@ -1110,16 +1124,19 @@ export default function GerenciarHorariosMes() {
     } finally {
       setTrabalhandoDia("");
     }
+  },
+});
+
+return;
   }
 
   async function desbloquearDia(data: string) {
     if (!id || !user?.uid) return;
 
-    const ok = window.confirm(
-      `Desbloquear o dia inteiro (${data})?\n\nIsso reativa apenas horários que foram bloqueados pelo dono.`
-    );
-    if (!ok) return;
-
+setConfirmData({
+  mensagem:
+    `Desbloquear o dia inteiro (${data})?\n\nIsso reativa TODOS os horários bloqueados do dia.`,
+  onConfirm: async () => {
     try {
       setMsg(null);
       setErro(null);
@@ -1127,14 +1144,14 @@ export default function GerenciarHorariosMes() {
 
       const lista = porDia[data] ?? [];
       if (lista.length === 0) {
-        setMsg("Não há horários nesse dia.");
+        setMsg("Não há horários nesse dia. Gere o dia primeiro.");
         return;
       }
 
       const promises: Promise<any>[] = [];
       for (const disp of lista) {
         if (disp.reservadoPorUid) continue;
-        if (disp.bloqueado !== true) continue;
+        if (!disp.bloqueado) continue;
 
         promises.push(
           updateDoc(doc(db, "disponibilidades", disp.id), {
@@ -1154,6 +1171,10 @@ export default function GerenciarHorariosMes() {
     } finally {
       setTrabalhandoDia("");
     }
+  },
+});
+
+return;
   }
 
   if (loading) return <p>Carregando usuário...</p>;
@@ -2029,22 +2050,24 @@ export default function GerenciarHorariosMes() {
               style={styles.greenBtn}
               onClick={async () => {
                 if (!id) return;
-                const ok = window.confirm(
-                  "Tem certeza que deseja finalizar o cadastro da quadra?"
-                );
-                if (!ok) return;
+setConfirmData({
+  mensagem: "Tem certeza que deseja finalizar o cadastro da quadra?",
+  onConfirm: async () => {
+    try {
+      await updateDoc(doc(db, "quadras", id), {
+        cadastroFinalizado: true,
+      });
 
-                try {
-                  await updateDoc(doc(db, "quadras", id), {
-                    cadastroFinalizado: true,
-                  });
+      alert("Quadra finalizada com sucesso ✅");
+      window.location.href = "/dono";
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao finalizar cadastro.");
+    }
+  },
+});
 
-                  alert("Quadra finalizada com sucesso ✅");
-                  window.location.href = "/dono";
-                } catch (e) {
-                  console.error(e);
-                  alert("Erro ao finalizar cadastro.");
-                }
+return;
               }}
             >
               ✅ Finalizar cadastro
@@ -2052,6 +2075,19 @@ export default function GerenciarHorariosMes() {
           </div>
         </div>
       </div>
+      <ConfirmModal
+        open={!!confirmData}
+        title="Confirmar ação"
+        message={confirmData?.mensagem ?? ""}
+        confirmText="Confirmar"
+        cancelText="Voltar"
+        onConfirm={async () => {
+          if (!confirmData) return;
+          await confirmData.onConfirm();
+          setConfirmData(null);
+        }}
+        onCancel={() => setConfirmData(null)}
+      />
     </>
   );
 }

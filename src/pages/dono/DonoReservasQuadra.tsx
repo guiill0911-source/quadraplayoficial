@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
+import ConfirmModal from "../../components/ConfirmModal";
 import {
   collection,
   getDocs,
@@ -535,6 +536,11 @@ export default function DonoReservasQuadra() {
   const [pagandoId, setPagandoId] = useState<string>("");
   const [aprovandoPixDevId, setAprovandoPixDevId] = useState<string>("");
 
+  const [confirmData, setConfirmData] = useState<{
+  mensagem: string;
+  onConfirm: () => Promise<void>;
+} | null>(null);
+
   const [dataFiltro, setDataFiltro] = useState("");
 
   const startParam = sp.get("start") ?? "";
@@ -627,11 +633,9 @@ console.log("RANKING:", rankingHorarios);
   async function onCancelar(r: Reserva) {
     if (!isAtiva(r.status)) return;
 
-    const ok = window.confirm(
-      `Cancelar reserva?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: `Cancelar reserva?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -647,16 +651,18 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setCancelandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onCancelarEBloquear(r: Reserva) {
     if (!isAtiva(r.status)) return;
 
-    const ok = window.confirm(
-      `Cancelar E BLOQUEAR horário?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: `Cancelar E BLOQUEAR horário?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -672,16 +678,18 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setBloqueandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onFinalizarManual(r: Reserva) {
     if (!isAtiva(r.status)) return;
 
-    const ok = window.confirm(
-      `FINALIZAR manualmente?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: `FINALIZAR manualmente?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -697,16 +705,18 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setFinalizandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onToggleNoShow(r: Reserva, marcar: boolean) {
-    const ok = window.confirm(
-      `${marcar ? "MARCAR" : "DESFAZER"} NÃO COMPARECEU?\n\n${r.data} ${
-        r.horaInicio
-      }–${r.horaFim}\nCliente: ${r.cliente?.nome ?? "—"}`
-    );
-    if (!ok) return;
-
+   setConfirmData({
+  mensagem: `${marcar ? "MARCAR" : "DESFAZER"} NÃO COMPARECEU?\n\n${r.data} ${
+    r.horaInicio
+  }–${r.horaFim}\nCliente: ${r.cliente?.nome ?? "—"}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -722,16 +732,18 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setNoShowId("");
     }
+  },
+});
+
+return;
   }
 
   async function onMarcarPago(r: Reserva) {
-    const ok = window.confirm(
-      `Marcar como PAGO?\n\n${r.data} ${r.horaInicio}–${r.horaFim}\nCliente: ${
-        r.cliente?.nome ?? "—"
-      }\nValor: ${formatBRL(Number(r.valor ?? 0))}`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: `Marcar como PAGO?\n\n${r.data} ${r.horaInicio}–${r.horaFim}\nCliente: ${
+    r.cliente?.nome ?? "—"
+  }\nValor: ${formatBRL(Number(r.valor ?? 0))}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -747,14 +759,16 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setPagandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onDesmarcarPago(r: Reserva) {
-    const ok = window.confirm(
-      `Desmarcar pagamento (voltar para PENDENTE)?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-    );
-    if (!ok) return;
-
+    setConfirmData({
+  mensagem: `Desmarcar pagamento (voltar para PENDENTE)?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -770,16 +784,18 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setPagandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onMarcarPagoDEV(r: Reserva) {
-    const ok = window.confirm(
-      `✅ DEV — Forçar PAGO?\n\n${r.data} ${r.horaInicio}–${r.horaFim}\nValor: ${formatBRL(
-        Number(r.valor ?? 0)
-      )}`
-    );
-    if (!ok) return;
-
+   setConfirmData({
+  mensagem: `✅ DEV — Forçar PAGO?\n\n${r.data} ${r.horaInicio}–${r.horaFim}\nValor: ${formatBRL(
+    Number(r.valor ?? 0)
+  )}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -805,14 +821,16 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setPagandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onDesmarcarPagoDEV(r: Reserva) {
-    const ok = window.confirm(
-      `✅ DEV — Voltar para PENDENTE?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-    );
-    if (!ok) return;
-
+setConfirmData({
+  mensagem: `✅ DEV — Voltar para PENDENTE?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -838,18 +856,21 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setPagandoId("");
     }
+  },
+});
+
+return;
   }
 
   async function onAprovarPixDEV(r: Reserva) {
-    const ok = window.confirm(
-      `✅ DEV — Simular APROVAÇÃO PIX (devApprovePix)?\n\nReserva: ${
-        r.id
-      }\n${r.data} ${r.horaInicio}–${r.horaFim}\nValor: ${formatBRL(
-        Number(r.valor ?? 0)
-      )}\n\nIsso vai marcar mpStatus=approved e pagamentoStatus=pago.`
-    );
-    if (!ok) return;
-
+   setConfirmData({
+  mensagem:
+    `✅ DEV — Simular APROVAÇÃO PIX (devApprovePix)?\n\nReserva: ${
+      r.id
+    }\n${r.data} ${r.horaInicio}–${r.horaFim}\nValor: ${formatBRL(
+      Number(r.valor ?? 0)
+    )}\n\nIsso vai marcar mpStatus=approved e pagamentoStatus=pago.`,
+  onConfirm: async () => {
     try {
       setErro(null);
       setMsg("");
@@ -868,6 +889,10 @@ console.log("RANKING:", rankingHorarios);
     } finally {
       setAprovandoPixDevId("");
     }
+  },
+});
+
+return;
   }
 
   const cont = useMemo(() => {
@@ -1336,6 +1361,19 @@ console.log("RANKING:", rankingHorarios);
           </section>
         </div>
       </div>
+            <ConfirmModal
+        open={!!confirmData}
+        title="Confirmar ação"
+        message={confirmData?.mensagem ?? ""}
+        confirmText="Confirmar"
+        cancelText="Voltar"
+        onConfirm={async () => {
+          if (!confirmData) return;
+          await confirmData.onConfirm();
+          setConfirmData(null);
+        }}
+        onCancel={() => setConfirmData(null)}
+      />
     </>
   );
 }

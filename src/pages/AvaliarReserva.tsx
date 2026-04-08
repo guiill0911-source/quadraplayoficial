@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
+import ConfirmModal from "../components/ConfirmModal";
 import { doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../services/firebase";
@@ -22,6 +23,7 @@ const styles = {
     maxWidth: 980,
     margin: "0 auto",
     padding: "20px 16px 32px",
+    boxSizing: "border-box" as const,
   } as const,
 
   backLink: {
@@ -187,6 +189,7 @@ const styles = {
     fontSize: 14,
     color: "#0f172a",
     outline: "none",
+    boxSizing: "border-box" as const,
   } as const,
 
   actions: {
@@ -289,7 +292,14 @@ function Stars({
   disabled?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 8,
+        alignItems: "center",
+        flexWrap: "wrap",
+      }}
+    >
       {[1, 2, 3, 4, 5].map((n) => {
         const ativo = n <= value;
 
@@ -334,6 +344,9 @@ export default function AvaliarReserva() {
 
   const [erro, setErro] = useState<string | null>(null);
   const [msg, setMsg] = useState<string>("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
 
   async function validarRegras() {
     setLoading(true);
@@ -360,7 +373,9 @@ export default function AvaliarReserva() {
         throw new Error("Você só pode avaliar após a reserva ser finalizada.");
       }
       if (r?.naoCompareceu === true) {
-        throw new Error("Não é possível avaliar uma reserva marcada como 'não compareceu'.");
+        throw new Error(
+          "Não é possível avaliar uma reserva marcada como 'não compareceu'."
+        );
       }
       if (r?.avaliadaEm) {
         throw new Error("Esta reserva já foi avaliada.");
@@ -379,21 +394,29 @@ export default function AvaliarReserva() {
   }
 
   useEffect(() => {
+    const onResize = () => {
+      setIsMobile(window.innerWidth <= 900);
+    };
+
+    onResize();
+    window.addEventListener("resize", onResize);
+
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
     validarRegras();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservaId, quadraId]);
 
   async function onEnviar() {
-    if (!permitido) return;
+    if (!permitido || enviando) return;
+    setConfirmOpen(true);
+  }
 
-    const ok = window.confirm(
-      `Enviar avaliação?\n\nNota: ${nota}\nComentário: ${
-        comentario?.trim() ? comentario.trim() : "—"
-      }`
-    );
-    if (!ok) return;
-
+  async function confirmarEnvio() {
     try {
+      setEnviando(true);
       setErro(null);
       setMsg("");
 
@@ -406,10 +429,13 @@ export default function AvaliarReserva() {
 
       setMsg("Avaliação enviada ✅");
       setPermitido(false);
+      setConfirmOpen(false);
 
       setTimeout(() => navigate("/minhas-reservas"), 800);
     } catch (e: any) {
       setErro(e?.message ?? "Erro ao enviar avaliação.");
+    } finally {
+      setEnviando(false);
     }
   }
 
@@ -431,35 +457,54 @@ export default function AvaliarReserva() {
             <div style={{ position: "relative" }}>
               <div style={styles.heroBadge}>AVALIAÇÃO DA RESERVA</div>
 
-              <h1 style={styles.heroTitle}>Conte como foi sua experiência na quadra</h1>
+              <h1 style={styles.heroTitle}>
+                Conte como foi sua experiência na quadra
+              </h1>
 
               <p style={styles.heroText}>
-                Sua avaliação ajuda outros atletas a escolher melhor e também fortalece a
-                credibilidade das quadras dentro do Quadra Play.
+                Sua avaliação ajuda outros atletas a escolher melhor e também
+                fortalece a credibilidade das quadras dentro do Quadra Play.
               </p>
             </div>
           </section>
 
-          <div style={styles.grid}>
+          <div
+            style={{
+              ...styles.grid,
+              gridTemplateColumns: isMobile ? "1fr" : "1.2fr 0.8fr",
+            }}
+          >
             <section style={styles.card}>
               <div style={styles.cardBody}>
                 <h2 style={styles.sectionTitle}>Enviar avaliação</h2>
                 <p style={styles.helper}>
-                  Escolha uma nota de 1 a 5 e, se quiser, escreva um comentário com sua
-                  percepção sobre a quadra.
+                  Escolha uma nota de 1 a 5 e, se quiser, escreva um comentário
+                  com sua percepção sobre a quadra.
                 </p>
 
-                {loading && <div style={styles.loadingBox}>Carregando validações da reserva…</div>}
+                {loading && (
+                  <div style={styles.loadingBox}>
+                    Carregando validações da reserva…
+                  </div>
+                )}
 
-                {!loading && erro && <div style={styles.alertError}>{erro}</div>}
+                {!loading && erro && (
+                  <div style={styles.alertError}>{erro}</div>
+                )}
 
-                {!loading && msg && !erro && <div style={styles.alertOk}>{msg}</div>}
+                {!loading && msg && !erro && (
+                  <div style={styles.alertOk}>{msg}</div>
+                )}
 
                 {!loading && permitido && (
                   <>
                     <div style={styles.field}>
                       <label style={styles.label}>Nota</label>
-                      <Stars value={nota} onChange={setNota} />
+                      <Stars
+                        value={nota}
+                        onChange={setNota}
+                        disabled={enviando}
+                      />
                     </div>
 
                     <div style={styles.field}>
@@ -470,15 +515,24 @@ export default function AvaliarReserva() {
                         rows={5}
                         style={styles.textarea}
                         placeholder="Ex: quadra muito boa, iluminação ótima, atendimento rápido, localização fácil..."
+                        disabled={enviando}
                       />
                     </div>
 
                     <div style={styles.actions}>
-                      <button onClick={onEnviar} style={styles.greenBtn}>
-                        Enviar avaliação
+                      <button
+                        onClick={onEnviar}
+                        style={styles.greenBtn}
+                        disabled={enviando}
+                      >
+                        {enviando ? "Enviando..." : "Enviar avaliação"}
                       </button>
 
-                      <button onClick={validarRegras} style={styles.neutralBtn}>
+                      <button
+                        onClick={validarRegras}
+                        style={styles.neutralBtn}
+                        disabled={enviando}
+                      >
                         Revalidar
                       </button>
                     </div>
@@ -497,31 +551,32 @@ export default function AvaliarReserva() {
               <div style={styles.sideBox}>
                 <h3 style={styles.sideTitle}>Dicas para avaliar bem</h3>
                 <p style={styles.sideText}>
-                  Uma boa avaliação é objetiva, honesta e ajuda outras pessoas a entender
-                  como foi a experiência real na quadra.
+                  Uma boa avaliação é objetiva, honesta e ajuda outras pessoas a
+                  entender como foi a experiência real na quadra.
                 </p>
 
                 <div style={styles.infoList}>
                   <div style={styles.infoItem}>
                     <p style={styles.infoItemLabel}>Considere</p>
                     <p style={styles.infoItemValue}>
-                      qualidade da quadra, iluminação, organização, localização e estado
-                      geral do espaço.
+                      qualidade da quadra, iluminação, organização, localização
+                      e estado geral do espaço.
                     </p>
                   </div>
 
                   <div style={styles.infoItem}>
                     <p style={styles.infoItemLabel}>Evite</p>
                     <p style={styles.infoItemValue}>
-                      comentários genéricos demais ou informações que não ajudem quem vai
-                      reservar depois.
+                      comentários genéricos demais ou informações que não ajudem
+                      quem vai reservar depois.
                     </p>
                   </div>
 
                   <div style={styles.infoItem}>
                     <p style={styles.infoItemLabel}>Objetivo</p>
                     <p style={styles.infoItemValue}>
-                      fortalecer a confiança no app e melhorar a escolha das quadras.
+                      fortalecer a confiança no app e melhorar a escolha das
+                      quadras.
                     </p>
                   </div>
                 </div>
@@ -551,6 +606,19 @@ export default function AvaliarReserva() {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmOpen}
+        title="Confirmar envio da avaliação"
+        message={`Você está prestes a enviar sua avaliação.\n\nNota: ${nota}\nComentário: ${
+          comentario?.trim() ? comentario.trim() : "—"
+        }`}
+        confirmText="Enviar avaliação"
+        cancelText="Voltar"
+        onConfirm={confirmarEnvio}
+        onCancel={() => setConfirmOpen(false)}
+        loading={enviando}
+      />
     </>
   );
 }

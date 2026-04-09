@@ -144,7 +144,8 @@ const styles = {
   } as const,
 
   card: {
-    background: "#ffffff",
+  background: "rgba(255,255,255,0.8)",
+  backdropFilter: "blur(6px)",
     border: "1px solid #e2e8f0",
     borderRadius: 24,
     boxShadow: "0 14px 34px rgba(15, 23, 42, 0.06)",
@@ -193,7 +194,7 @@ const styles = {
   greenBtn: {
     border: "none",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+    background: "linear-gradient(135deg, #8ae809 0%, #6fd307 100%)",
     color: "#fff",
     padding: "12px 16px",
     fontWeight: 800,

@@ -172,7 +172,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #0f172a 0%, #111827 180px, #f8fafc 180px, #f8fafc 100%)",
+  "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fbff 180px, #ffffff 60%, #f8fbff 100%)",
   } as CSSProperties,
 
   container: {
@@ -194,7 +194,7 @@ const styles = {
   } as CSSProperties,
 
   heroCard: {
-    background: "#ffffff",
+    background: "#ffffffee",
     borderRadius: 22,
     overflow: "hidden",
     boxShadow: "0 18px 50px rgba(15, 23, 42, 0.12)",
@@ -339,7 +339,7 @@ const styles = {
   } as CSSProperties,
 
   galleryDotActive: {
-    background: "#ffffff",
+    background: "#eef2ff",
     transform: "scale(1.2)",
   } as CSSProperties,
 
@@ -404,7 +404,7 @@ badgeRow: {
   } as CSSProperties,
 
   card: {
-    background: "#ffffff",
+    background: "#ffffffee",
     borderRadius: 20,
     padding: 18,
     boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
@@ -450,7 +450,7 @@ badgeRow: {
 
   infoValue: {
     fontSize: 18,
-    color: "#0f172a",
+    color: "#8ae809",
     fontWeight: 800,
   } as CSSProperties,
 
@@ -539,8 +539,8 @@ badgeRow: {
     gap: 8,
     padding: "12px 14px",
     borderRadius: 14,
-    border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    border: "1px solid #c7d2fe",
+    background: "#eef2ff",
     fontWeight: 600,
     color: "#0f172a",
   } as CSSProperties,
@@ -554,7 +554,7 @@ badgeRow: {
     padding: "0 16px",
     borderRadius: 14,
     border: "none",
-    background: "linear-gradient(135deg, #10b981, #059669)",
+    background: "linear-gradient(135deg, #8ae809, #6fd307)",
     color: "#fff",
     fontWeight: 800,
     cursor: "pointer",
@@ -612,7 +612,7 @@ badgeRow: {
 
   slotCard: {
     border: "1px solid #e2e8f0",
-    background: "linear-gradient(180deg, #ffffff, #f8fafc)",
+    background: "linear-gradient(180deg, #ffffffee, #f8fbff)",
     borderRadius: 18,
     padding: 14,
     display: "flex",
@@ -1500,12 +1500,10 @@ return;
       ? formatBRL(Number(quadra.valoresPorEsporte[esporte]))
       : null;
 
-  const fotos =
-    Array.isArray(quadra.fotos) && quadra.fotos.length > 0
-      ? quadra.fotos.filter(Boolean)
-      : quadra.fotoCapaUrl
-      ? [quadra.fotoCapaUrl]
-      : [];
+const fotos = [
+  ...(quadra.fotoCapaUrl ? [quadra.fotoCapaUrl] : []),
+  ...((quadra.fotos ?? []).filter(Boolean))
+];
 
   return (
     <div style={styles.page}>
@@ -1729,7 +1727,15 @@ return;
             <div style={{ marginTop: 14 }}>
               <span style={styles.label}>Forma de pagamento</span>
               <div style={styles.radioWrap}>
-                <label style={styles.radioCard}>
+                <label
+  style={{
+    ...styles.radioCard,
+    ...(pagamentoTipo === "presencial" && {
+      background: "#dbeafe",
+      border: "1px solid #93c5fd",
+    }),
+  }}
+>
                   <input
                     type="radio"
                     value="presencial"
@@ -1742,7 +1748,15 @@ return;
                   Pagar na quadra
                 </label>
 
-                <label style={styles.radioCard}>
+                <label
+  style={{
+    ...styles.radioCard,
+    ...(pagamentoTipo === "pix" && {
+      background: "#dbeafe",
+      border: "1px solid #93c5fd",
+    }),
+  }}
+>
                   <input
                     type="radio"
                     value="pix"
@@ -1922,12 +1936,12 @@ return;
                               : "pointer",
                           background:
                             quadraInativa || bloqueioInfo.suspenso || bloqueadoPorMulta
-                              ? "linear-gradient(135deg, #94a3b8, #64748b)"
-                              : "linear-gradient(135deg, #10b981, #059669)",
+                              ? "linear-gradient(135deg, #8ae809, #6fd307)"
+                              : "linear-gradient(135deg, #8ae809, #059669)",
                           boxShadow:
                             quadraInativa || bloqueioInfo.suspenso || bloqueadoPorMulta
                               ? "none"
-                              : "0 12px 24px rgba(16, 185, 129, 0.28)",
+                              : "0 10px 30px rgba(34, 197, 94, 0.35)"
                         }}
                         title={
                           quadraInativa

@@ -707,7 +707,7 @@ if (score >= 90) {
         style={{
           minHeight: "100vh",
           background:
-            "linear-gradient(180deg, #08142b 0px, #0f2f63 170px, #eaf4ff 170px, #f4fbff 58%, #f6fffb 100%)",
+  "linear-gradient(180deg, #03122e 0px, #053ff9 170px, #f8fbff 170px, #ffffff 58%, #f8fbff 100%)",
           padding: "16px 12px 140px",
         }}
       >
@@ -793,7 +793,7 @@ if (score >= 90) {
 >
           <div
             style={{
-              background: "linear-gradient(135deg, #0f2f63, #2563eb, #60a5fa)",
+              background: "linear-gradient(135deg, #03122e, #053ff9, #2d6bff)",
               color: "#ffffff",
               borderRadius: 24,
               padding: "14px 14px",
@@ -927,11 +927,11 @@ if (score >= 90) {
           <div
             style={{
               marginTop: 18,
-              background: "linear-gradient(180deg, #ffffff, #f8fafc)",
+              background: "linear-gradient(180deg, #ffffff, #f8fbff)",
               borderRadius: 26,
               padding: 28,
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 25px 60px rgba(15,23,42,0.12)",
+              border: "1px solid rgba(5, 63, 249, 0.10)",
+              boxShadow: "0 25px 60px rgba(3,18,46,0.10)",
               backdropFilter: "blur(6px)",
             }}
           >
@@ -979,7 +979,7 @@ if (score >= 90) {
                       padding: "0 32px",
                       borderRadius: 20,
                       border: "none",
-                      background: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                      background: "linear-gradient(135deg, #8ae809 0%, #6fd306 100%)",
                       color: "#ffffff",
                       fontWeight: 900,
                       fontSize: 18,
@@ -1158,9 +1158,9 @@ if (score >= 90) {
                 marginTop: 18,
                 padding: 18,
                 borderRadius: 22,
-                background: "linear-gradient(180deg, #ffffff, #eef4ff)",  
-                border: "1px solid rgba(0, 224, 255, 0.08)",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                background: "linear-gradient(180deg, #ffffff, #f8fbff)",
+                border: "1px solid rgba(5, 63, 249, 0.08)",
+                boxShadow: "0 8px 24px rgba(3,18,46,0.08)",
                 position: "relative",
               }}
             >
@@ -1173,7 +1173,7 @@ if (score >= 90) {
     top: 0,
     bottom: 0,
     width: 24,
-    background: "linear-gradient(to right, #ffffff, transparent)",
+    background: "linear-gradient(to left, #ffffff, transparent)",
     zIndex: 2,
     pointerEvents: "none",
   }}
@@ -1187,7 +1187,7 @@ if (score >= 90) {
     top: 0,
     bottom: 0,
     width: 24,
-    background: "linear-gradient(to left, #ffffff, transparent)",
+    background: "linear-gradient(to right, #ffffff, transparent)",
     zIndex: 2,
     pointerEvents: "none",
   }}
@@ -1243,13 +1243,15 @@ scrollbarWidth: "none",
                       style={{
   padding: "10px 16px",
   borderRadius: 999,
-  border: ativo 
-  ? "1px solid #00e0ff" 
-  : "1px solid rgba(0,224,255,0.15)",
-  background: ativo
-    ? "linear-gradient(135deg, #00e0ff, #2563eb, #1e40af)"
-    : "linear-gradient(135deg, #ffffff, #f1f5ff)",
-  color: ativo ? "#fff" : "#0f172a",
+background: ativo
+  ? "#053ff9"
+  : "rgba(5, 63, 249, 0.06)",
+
+color: ativo ? "#ffffff" : "#053ff9",
+
+border: ativo
+  ? "1px solid #053ff9"
+  : "1px solid rgba(5, 63, 249, 0.12)",
   fontWeight: 700,
   fontSize: 13,
   cursor: "pointer",
@@ -1288,9 +1290,15 @@ onMouseLeave={(e) => {
                   style={{
                     padding: "9px 12px",
                     borderRadius: 999,
-                    border: chipPertoDeMim ? "1px solid #86efac" : "1px solid #e2e8f0",
-                    background: chipPertoDeMim ? "#ecfdf5" : "#fff",
-                    color: chipPertoDeMim ? "#166534" : "#334155",
+                    border: chipPertoDeMim
+  ? "1px solid #053ff9"
+  : "1px solid rgba(5, 63, 249, 0.12)",
+
+background: chipPertoDeMim
+  ? "#053ff9"
+  : "rgba(5, 63, 249, 0.06)",
+
+color: chipPertoDeMim ? "#ffffff" : "#053ff9",
                     fontWeight: 800,
                     cursor: "pointer",
                   }}
@@ -1629,13 +1637,15 @@ onMouseLeave={(e) => {
         onMouseEnter={() => setHoveredQuadraId(q.id)}
         onMouseLeave={() => setHoveredQuadraId(null)}
         style={{
-          background: "#fff",
+          background: "linear-gradient(180deg, #ffffff, #f8fbff)",
           borderRadius: 22,
           overflow: "hidden",
-          border: isHovered ? "1px solid #bfdbfe" : "1px solid #e5e7eb",
+          border: isHovered
+  ? "1px solid rgba(5, 63, 249, 0.22)"
+  : "1px solid rgba(5, 63, 249, 0.08)",
           boxShadow: isHovered
-            ? "0 20px 42px rgba(15,23,42,0.14)"
-            : "0 10px 24px rgba(15,23,42,0.08)",
+  ? "0 20px 42px rgba(3,18,46,0.16)"
+  : "0 10px 24px rgba(3,18,46,0.10)",
           transition:
             "transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border 0.22s ease",
           transform: isHovered ? "scale(1.02)" : "scale(1)",
@@ -1930,8 +1940,8 @@ onMouseLeave={(e) => {
                 minHeight: 32,
                 padding: "0 12px",
                 borderRadius: 12,
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                color: "#fff",
+                background: "linear-gradient(135deg, #8ae809, #6fd306)",
+                color: "#03122e",
                 fontWeight: 900,
                 fontSize: 11,
                 boxShadow: isHovered
@@ -1984,16 +1994,17 @@ onMouseLeave={(e) => {
           </div>
 
           <div
-            style={{
-              marginTop: 32,
-              borderRadius: 28,
-              padding: "28px 20px",
-              background: "linear-gradient(135deg, #0f172a, #172554)",
-              color: "#fff",
-              boxShadow: "0 20px 50px rgba(15,23,42,0.22)",
-              overflow: "hidden",
-            }}
-          >
+  style={{
+    marginTop: 32,
+    borderRadius: 28,
+    padding: "28px 20px",
+    background: "linear-gradient(135deg, #03122e 0%, #053ff9 100%)",
+    color: "#fff",
+    border: "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "0 20px 50px rgba(3,18,46,0.22)",
+    overflow: "hidden",
+  }}
+>
             <div
               style={{
                 display: "grid",
@@ -2109,7 +2120,7 @@ onMouseLeave={(e) => {
               marginTop: 18,
               marginBottom: 12,
               borderRadius: 22,
-              background: "#0f172a",
+              background: "linear-gradient(135deg, #03122e 0%, #0a1f4d 100%)",
               color: "#cbd5e1",
               border: "1px solid rgba(148,163,184,0.12)",
               padding: "24px 20px",
@@ -2137,7 +2148,7 @@ onMouseLeave={(e) => {
                   style={{
                     marginTop: 8,
                     fontSize: 14,
-                    color: "#94a3b8",
+                    color: "#cbd5e1",
                     lineHeight: 1.7,
                     maxWidth: 280,
                   }}
@@ -2254,7 +2265,8 @@ onMouseLeave={(e) => {
               style={{
                 marginTop: 20,
                 paddingTop: 16,
-                borderTop: "1px solid rgba(148,163,184,0.14)",
+                borderTop: "1px solid rgba(5, 63, 249, 0.18)",
+                boxShadow: "0 25px 60px rgba(3,18,46,0.28)",
                 display: "flex",
                 justifyContent: "space-between",
                 gap: 12,
@@ -2265,7 +2277,7 @@ onMouseLeave={(e) => {
               <div
                 style={{
                   fontSize: 13,
-                  color: "#94a3b8",
+                  color: "#cbd5e1",
                   fontWeight: 700,
                 }}
               >

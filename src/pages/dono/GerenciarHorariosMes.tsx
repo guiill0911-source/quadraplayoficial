@@ -258,33 +258,36 @@ function resumoFuncionamento(ui: FuncUI) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background:
-      "linear-gradient(180deg, #0f172a 0px, #111827 190px, #f8fafc 190px, #f8fafc 100%)",
-  },
+page: {
+  minHeight: "100vh",
+  background:
+    "linear-gradient(180deg, #03122e 0px, #03122e 190px, #f8fafc 190px, #f8fafc 100%)",
+},
   container: {
     maxWidth: 1180,
     margin: "0 auto",
     padding: "18px 16px 40px",
   },
   hero: {
-    background: "linear-gradient(135deg, #111827, #1e293b)",
-    color: "#fff",
-    borderRadius: 24,
-    padding: "26px 24px",
-    boxShadow: "0 18px 45px rgba(15,23,42,0.20)",
-    marginTop: 12,
-  },
+  background: "linear-gradient(135deg, #03122e 0%, #053ff9 58%, #2a63ff 100%)",
+  color: "#fff",
+  borderRadius: 28,
+  padding: "28px 24px",
+  boxShadow: "0 20px 48px rgba(3,18,46,0.24)",
+  marginTop: 12,
+  border: "1px solid rgba(255,255,255,0.08)",
+},
   heroBadge: {
-    display: "inline-flex",
-    padding: "8px 12px",
-    borderRadius: 999,
-    background: "rgba(255,255,255,0.10)",
-    fontWeight: 800,
-    fontSize: 13,
-    marginBottom: 12,
-  },
+  display: "inline-flex",
+  padding: "8px 12px",
+  borderRadius: 999,
+  background: "rgba(138,232,9,0.14)",
+  border: "1px solid rgba(138,232,9,0.30)",
+  color: "#ffffff",
+  fontWeight: 800,
+  fontSize: 13,
+  marginBottom: 12,
+},
   heroTitle: {
     margin: 0,
     fontSize: 36,
@@ -367,41 +370,47 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: "0 10px 20px rgba(37,99,235,0.18)",
   },
   smallBtn: {
-    minHeight: 32,
-    padding: "0 8px",
-    borderRadius: 10,
-    border: "1px solid #cbd5e1",
-    background: "#fff",
-    color: "#0f172a",
-    fontWeight: 700,
-    cursor: "pointer",
-    fontSize: 11,
-    whiteSpace: "nowrap",
-  },
+  minHeight: 34,
+  minWidth: 34,
+  padding: "0 10px",
+  borderRadius: 12,
+  border: "1px solid #dbe4ff",
+  background: "#f8fbff",
+  color: "#03122e",
+  fontWeight: 800,
+  cursor: "pointer",
+  fontSize: 11,
+  whiteSpace: "nowrap",
+  boxShadow: "0 4px 10px rgba(5,63,249,0.06)",
+},
   smallGreenBtn: {
-    minHeight: 32,
-    padding: "0 8px",
-    borderRadius: 10,
-    border: "1px solid #bbf7d0",
-    background: "#ecfdf5",
-    color: "#166534",
-    fontWeight: 800,
-    cursor: "pointer",
-    fontSize: 11,
-    whiteSpace: "nowrap",
-  },
+  minHeight: 34,
+  minWidth: 34,
+  padding: "0 10px",
+  borderRadius: 12,
+  border: "1px solid rgba(138,232,9,0.45)",
+  background: "#f4ffd9",
+  color: "#355400",
+  fontWeight: 900,
+  cursor: "pointer",
+  fontSize: 11,
+  whiteSpace: "nowrap",
+  boxShadow: "0 4px 10px rgba(138,232,9,0.14)",
+},
   smallRedBtn: {
-    minHeight: 32,
-    padding: "0 8px",
-    borderRadius: 10,
-    border: "1px solid #fecaca",
-    background: "#fff1f2",
-    color: "#b91c1c",
-    fontWeight: 800,
-    cursor: "pointer",
-    fontSize: 11,
-    whiteSpace: "nowrap",
-  },
+  minHeight: 34,
+  minWidth: 34,
+  padding: "0 10px",
+  borderRadius: 12,
+  border: "1px solid #fecaca",
+  background: "#fff1f2",
+  color: "#b91c1c",
+  fontWeight: 900,
+  cursor: "pointer",
+  fontSize: 11,
+  whiteSpace: "nowrap",
+  boxShadow: "0 4px 10px rgba(185,28,28,0.08)",
+},
   statusBox: {
     marginTop: 12,
     minHeight: 24,
@@ -439,12 +448,12 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 6,
   },
   weekGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 150px)",
-    gap: 10,
-    marginBottom: 10,
-    minWidth: 1110,
-  },
+  display: "grid",
+  gridTemplateColumns: "repeat(7, minmax(130px, 1fr))",
+  gap: 10,
+  marginBottom: 10,
+  minWidth: 980,
+},
   weekHeader: {
     fontSize: 12,
     fontWeight: 900,
@@ -453,38 +462,41 @@ const styles: Record<string, React.CSSProperties> = {
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  monthGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 150px)",
-    gap: 10,
-    minWidth: 1110,
-  },
+ monthGrid: {
+  display: "grid",
+  gridTemplateColumns: "repeat(7, minmax(130px, 1fr))",
+  gap: 10,
+  minWidth: 980,
+},
   singleColumnGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(1, minmax(0, 1fr))",
     gap: 10,
     maxWidth: 1040,
   },
-  dayCardActive: {
-    border: "1px solid #dbeafe",
-    borderRadius: 18,
-    padding: 12,
-    minHeight: 210,
-    background: "linear-gradient(180deg, #ffffff, #f8fbff)",
-    boxShadow: "0 10px 24px rgba(37,99,235,0.08)",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  },
+dayCardActive: {
+  borderRadius: 20,
+  padding: 14,
+  background: "#ffffff",
+  border: "1px solid #e2e8f0",
+  boxShadow: "0 6px 18px rgba(3,18,46,0.08)",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  transition: "all 0.18s ease",
+  cursor: "pointer",
+  transform: "translateY(0px)",
+},
   dayCardEmpty: {
-    border: "1px solid #e2e8f0",
-    borderRadius: 18,
-    padding: 12,
-    minHeight: 210,
-    background: "#fcfcfd",
-    boxShadow: "0 6px 14px rgba(15,23,42,0.03)",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  },
+  borderRadius: 20,
+  padding: 14,
+  background: "#f8fafc",
+  border: "1px dashed #cbd5f5",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  opacity: 0.9,
+},
   blankDay: {
     border: "1px dashed #e2e8f0",
     borderRadius: 18,
@@ -494,29 +506,34 @@ const styles: Record<string, React.CSSProperties> = {
     boxSizing: "border-box",
   },
   dayTop: {
-    display: "grid",
-    gap: 10,
-  },
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+  height: "100%",
+  justifyContent: "space-between",
+},
   dayHeader: {
     minWidth: 0,
   },
   dayActions: {
-    display: "grid",
-    gap: 6,
-    alignContent: "start",
-  },
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+},
   dayNumber: {
-    fontWeight: 900,
-    fontSize: 22,
-    color: "#0f172a",
-    lineHeight: 1,
-  },
+  fontWeight: 900,
+  fontSize: 20,
+  color: "#053ff9",
+  lineHeight: 1,
+},
   dayMeta: {
-    fontSize: 12,
-    color: "#64748b",
-    marginTop: 6,
-    lineHeight: 1.5,
-  },
+  fontSize: 12,
+  color: "#64748b",
+  marginTop: 4,
+  lineHeight: 1.4,
+  fontWeight: 600,
+},
   dayStatsWrap: {
     marginTop: 10,
     display: "grid",
@@ -625,6 +642,17 @@ export default function GerenciarHorariosMes() {
   mensagem: string;
   onConfirm: () => Promise<void>;
 } | null>(null);
+
+const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
+
+useEffect(() => {
+  function onResize() {
+    setIsMobile(window.innerWidth <= 900);
+  }
+
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
 
   const [ano, mesNum] = mes.split("-").map((x) => Number(x));
   const monthIndex0 = (mesNum || 1) - 1;
@@ -1643,219 +1671,150 @@ return;
                 ) : (
                   <>
                     {!mostrarSomenteDiasComHorarios ? (
-                      <div style={styles.gridViewport}>
-                        <div style={styles.weekGrid}>
-                          {DIAS_SEMANA.map((d) => (
-                            <div key={d} style={styles.weekHeader}>
-                              {d}
-                            </div>
-                          ))}
-                        </div>
-
-                        <div style={styles.monthGrid}>
-                          {gridDias.map((diaOrNull, idx) => {
-                            if (!diaOrNull) {
-                              return <div key={`blank-${idx}`} style={styles.blankDay} />;
-                            }
-
-                            const dia = diaOrNull;
-                            const lista = porDia[dia] ?? [];
-                            const total = lista.length;
-
-                            const ativos = lista.filter((x) => x.ativo === true).length;
-                            const bloqueados = lista.filter((x) => x.bloqueado === true).length;
-                            const reservados = lista.filter((x) => !!x.reservadoPorUid).length;
-
-                            const busy = trabalhandoDia === dia || gerandoMes;
-                            const temHorarios = total > 0;
-                            const diaNum = dayNumberFromISO(dia);
-                            const passado = isPastDay(dia);
-
-                            const exResumo = resumoExcecao(dia);
-
-                            return (
-                              <div
-                                key={dia}
-                                style={{
-                                  ...(temHorarios ? styles.dayCardActive : styles.dayCardEmpty),
-                                  opacity: passado ? 0.72 : 1,
-                                }}
-                              >
-                                <div style={styles.dayTop}>
-                                  <div style={styles.dayHeader}>
-                                    <div style={styles.dayNumber}>{diaNum}</div>
-
-                                    <div style={styles.dayMeta}>
-                                      {temHorarios ? (
-                                        <>
-                                          <strong>{total}</strong> horários no dia
-                                        </>
-                                      ) : passado ? (
-                                        "Dia passado"
-                                      ) : (
-                                        "Sem horários"
-                                      )}
-                                    </div>
-
-                                    {temHorarios ? (
-                                      <div style={styles.dayStatsWrap}>
-                                        <div style={styles.statBadgeRow}>
-                                          <span style={styles.statGreen}>🟢 {ativos} ativos</span>
-                                          <span style={styles.statRed}>🔒 {bloqueados} bloqueados</span>
-                                          <span style={styles.statBlue}>📅 {reservados} reservados</span>
-                                        </div>
-                                      </div>
-                                    ) : null}
-
-                                    {exResumo ? (
-                                      <div
-                                        style={{
-                                          marginTop: 8,
-                                          fontSize: 12,
-                                          color: "#334155",
-                                          fontWeight: 800,
-                                          padding: "6px 8px",
-                                          borderRadius: 10,
-                                          background: "#f8fafc",
-                                          border: "1px solid #e2e8f0",
-                                          display: "inline-block",
-                                        }}
-                                      >
-                                        {exResumo}
-                                      </div>
-                                    ) : null}
-                                  </div>
-
-                                  <div
+                      <div
   style={{
-    ...styles.dayActions,
-    alignItems: "center",
+    ...styles.gridViewport,
+    overflowX: "auto",
+    WebkitOverflowScrolling: "touch",
+    paddingBottom: 12,
   }}
 >
-                                    <button
-                                      onClick={() => gerarDia(dia)}
-                                      disabled={busy || passado}
-                                      style={styles.smallGreenBtn}
-                                    >
-                                      {busy ? "..." : "⚡ Gerar"}
-                                    </button>
-
-                                  <Link
-  to={`/dono/quadra/${id}/horarios-dia/${dia}`}
+<div
   style={{
-    textDecoration: "none",
-    display: "block",
-    width: "100%",
+    ...styles.weekGrid,
+    gridTemplateColumns: isMobile ? "repeat(7, 92px)" : styles.weekGrid.gridTemplateColumns,
+    minWidth: isMobile ? 700 : styles.weekGrid.minWidth,
   }}
 >
-  <div
-    style={{
-      ...styles.smallBtn,
-      width: "100%",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 6,
-      boxSizing: "border-box",
-      textAlign: "center",
-    }}
-  >
-    <span>📅</span>
-    <span>Abrir dia</span>
-  </div>
-</Link>
+  {DIAS_SEMANA.map((d) => (
+    <div key={d} style={styles.weekHeader}>
+      {d}
+    </div>
+  ))}
+</div>
 
-                                    <button
-                                      onClick={() => bloquearDia(dia)}
-                                      disabled={busy || !temHorarios}
-                                      style={styles.smallBtn}
-                                    >
-                                      🔒 Bloq.
-                                    </button>
+<div
+  style={{
+    ...styles.monthGrid,
+    gridTemplateColumns: isMobile ? "repeat(7, 92px)" : styles.monthGrid.gridTemplateColumns,
+    minWidth: isMobile ? 700 : styles.monthGrid.minWidth,
+  }}
+>
+  {gridDias.map((diaOrNull, idx) => {
+    if (!diaOrNull) {
+      return <div key={`blank-${idx}`} style={styles.blankDay} />;
+    }
 
-                                    <button
-                                      onClick={() => desbloquearDia(dia)}
-                                      disabled={busy || !temHorarios}
-                                      style={styles.smallBtn}
-                                    >
-                                      🔓 Desbloq.
-                                    </button>
+    const dia = diaOrNull;
+    const lista = porDia[dia] ?? [];
+    const total = lista.length;
 
-                                    <button
-                                      onClick={() => zerarDia(dia)}
-                                      disabled={busy || !temHorarios}
-                                      style={styles.smallRedBtn}
-                                    >
-                                      🧹 Zerar
-                                    </button>
+    const ativos = lista.filter((x) => x.ativo === true).length;
+    const bloqueados = lista.filter((x) => x.bloqueado === true).length;
+    const reservados = lista.filter((x) => !!x.reservadoPorUid).length;
 
-                                    <button
-                                      onClick={() => editarDia(dia)}
-                                      disabled={busy}
-                                      style={styles.smallBtn}
-                                    >
-                                      ✏️ Editar
-                                    </button>
-                                  </div>
+    const busy = trabalhandoDia === dia || gerandoMes;
+    const temHorarios = total > 0;
+    const diaNum = dayNumberFromISO(dia);
+    const passado = isPastDay(dia);
 
-                                  {temHorarios ? (
-                                    <div style={styles.miniSlots}>
-                                      <div style={styles.slotsHint}>Prévia dos horários</div>
+    const exResumo = resumoExcecao(dia);
 
-                                      {lista.slice(0, 2).map((s) => (
-                                        <div
-                                          key={s.id}
-                                          style={{
-                                            ...styles.miniSlotRow,
-                                            opacity: s.ativo ? 1 : 0.8,
-                                          }}
-                                        >
-                                          <span>
-                                            {s.horaInicio}–{s.horaFim}
-                                          </span>
+    return (
+      <div
+        key={dia}
+        style={{
+          ...(temHorarios ? styles.dayCardActive : styles.dayCardEmpty),
+          opacity: passado ? 0.72 : 1,
+        }}
+      >
+        <div style={styles.dayTop}>
+          <div style={styles.dayHeader}>
+            <div style={styles.dayNumber}>{diaNum}</div>
 
-                                          <span
-                                            style={{
-                                              color: s.reservadoPorUid
-                                                ? "#334155"
-                                                : s.bloqueado
-                                                ? "#b91c1c"
-                                                : s.ativo
-                                                ? "#15803d"
-                                                : "#64748b",
-                                              fontWeight: 800,
-                                            }}
-                                          >
-                                            {s.reservadoPorUid
-                                              ? "reservado"
-                                              : s.bloqueado
-                                              ? "bloqueado"
-                                              : s.ativo
-                                              ? "ativo"
-                                              : "off"}
-                                          </span>
-                                        </div>
-                                      ))}
+            <div style={styles.dayMeta}>
+              {temHorarios ? (
+                <>
+                  <strong>{total}</strong> horários no dia
+                </>
+              ) : passado ? (
+                "Dia passado"
+              ) : (
+                "Sem horários"
+              )}
+            </div>
 
-                                      {total > 2 ? (
-                                        <div
-                                          style={{
-                                            fontSize: 11,
-                                            color: "#64748b",
-                                            fontWeight: 700,
-                                          }}
-                                        >
-                                          +{total - 2} horários…
-                                        </div>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+            {temHorarios ? (
+              <div style={styles.dayStatsWrap}>
+                <div style={styles.statBadgeRow}>
+                  <span style={styles.statGreen}>🟢 {ativos}</span>
+                  <span style={styles.statRed}>🔒 {bloqueados}</span>
+                  <span style={styles.statBlue}>📅 {reservados}</span>
+                </div>
+              </div>
+            ) : null}
+
+            {exResumo ? (
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: "#334155",
+                  fontWeight: 800,
+                }}
+              >
+                {exResumo}
+              </div>
+            ) : null}
+          </div>
+
+          <div style={styles.dayActions}>
+            <button
+              onClick={() => gerarDia(dia)}
+              disabled={busy || passado}
+              style={styles.smallGreenBtn}
+            >
+              ⚡ Gerar
+            </button>
+
+            <button
+              onClick={() => bloquearDia(dia)}
+              disabled={busy || !temHorarios}
+              style={styles.smallBtn}
+            >
+              🔒 Bloquear
+            </button>
+
+            <button
+              onClick={() => desbloquearDia(dia)}
+              disabled={busy || !temHorarios}
+              style={styles.smallBtn}
+            >
+              🔓 Liberar
+            </button>
+
+            <button
+              onClick={() => zerarDia(dia)}
+              disabled={busy || !temHorarios}
+              style={styles.smallRedBtn}
+            >
+              🧹 Limpar dia
+            </button>
+
+            <button
+  onClick={() => editarDia(dia)}
+  disabled={busy}
+  style={styles.smallBtn}
+>
+  ✏️ Editar dia
+</button>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+</div>
                     ) : (
                       <div style={styles.singleColumnGrid}>
                         {gridDias.map((diaOrNull, idx) => {

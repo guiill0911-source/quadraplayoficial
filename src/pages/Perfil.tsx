@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import { useAuth } from "../services/authContext";
-import { db, auth } from "../services/firebase";
+import { db, auth, storage } from "../services/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { updateEmail } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import {
@@ -12,6 +13,7 @@ import {
   query,
   where,
   orderBy,
+  updateDoc,
 } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import {
@@ -139,6 +141,33 @@ export default function Perfil() {
   const [reputacao, setReputacao] = useState<ResumoReputacao>(
     resumoReputacaoPadrao()
   );
+
+  async function handleUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file || !user?.uid) return;
+
+  try {
+    const storageRef = ref(storage, `users/${user.uid}/profile.jpg`);
+
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      fotoPerfil: url,
+    });
+
+    setData((prev: any) => ({
+      ...prev,
+      fotoPerfil: url,
+    }));
+
+    alert("Foto atualizada!");
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao enviar foto");
+  }
+}
 
   async function carregar() {
     if (!user?.uid) return;
@@ -344,15 +373,35 @@ export default function Perfil() {
       <div style={styles.page}>
         <div style={styles.container}>
           <div style={styles.profileHeader}>
-            <h1 style={styles.title}>PERFIL TESTE 999</h1>
+            <div style={styles.avatarWrap}>
+  {data?.fotoPerfil ? (
+    <img src={data.fotoPerfil} alt="Foto de perfil" style={styles.avatar} />
+  ) : (
+    <div style={styles.avatarPlaceholder}>👤</div>
+  )}
 
-            <p style={styles.subtitle}>
-              {data?.nome} {data?.sobrenome}
-            </p>
+  <label style={styles.uploadBtn}>
+    📷
+    <input
+  type="file"
+  accept="image/*"
+  onChange={handleUploadFoto}
+  style={{ display: "none" }}
+/>
+  </label>
+</div>
 
-            <div style={{ marginTop: 6 }}>
-              <span style={styles.email}>{data?.email}</span>
-            </div>
+            <div style={styles.profileInfo}>
+  <h1 style={styles.title}>PERFIL TESTE 999</h1>
+
+  <p style={styles.subtitle}>
+    {data?.nome} {data?.sobrenome}
+  </p>
+
+  <div style={{ marginTop: 6 }}>
+    <span style={styles.email}>{data?.email}</span>
+  </div>
+</div>
           </div>
 
           <div style={styles.card}>
@@ -645,7 +694,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%)",
+  "linear-gradient(180deg, #03122e 0px, #053ff9 170px, #f8fbff 170px, #ffffff 58%, #f8fbff 100%)",
     paddingBottom: 40,
   },
 
@@ -655,35 +704,94 @@ const styles = {
     padding: "14px 12px 88px",
   },
 
-  profileHeader: {
-    marginBottom: 14,
-  },
+ profileHeader: {
+  marginBottom: 14,
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 16,
+  flexWrap: "nowrap" as const,
+},
+
+avatarWrap: {
+  position: "relative" as const,
+  width: 72,
+  height: 72,
+  flex: "0 0 72px",
+},
+
+avatar: {
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  objectFit: "cover" as const,
+  border: "2px solid #e2e8f0",
+},
+
+avatarPlaceholder: {
+  width: "100%",
+  height: "100%",
+  borderRadius: "50%",
+  background: "#e2e8f0",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 24,
+},
+
+uploadBtn: {
+  position: "absolute" as const,
+  bottom: -2,
+  right: -2,
+  background: "#053ff9",
+  color: "#fff",
+  borderRadius: "50%",
+  width: 24,
+  height: 24,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: 12,
+  cursor: "pointer",
+  border: "2px solid #fff",
+},
 
   title: {
-    fontSize: 24,
-    fontWeight: 900,
-    margin: 0,
-    lineHeight: 1.1,
-  },
+  fontSize: 24,
+  fontWeight: 900,
+  margin: 0,
+  lineHeight: 1.05,
+  color: "#ffffff",
+  wordBreak: "break-word" as const,
+},
 
   subtitle: {
-    margin: "6px 0 0",
-    fontWeight: 700,
-    fontSize: 15,
-  },
+  margin: "4px 0 0",
+  fontWeight: 700,
+  fontSize: 15,
+  lineHeight: 1.25,
+  color: "#e2e8f0",
+  wordBreak: "break-word" as const,
+},
 
   email: {
-    color: "#64748b",
-    fontSize: 13,
-  },
+  color: "#cbd5f5",
+  fontSize: 13,
+  lineHeight: 1.35,
+  wordBreak: "break-all" as const,
+},
+
+profileInfo: {
+  minWidth: 0,
+  flex: 1,
+},
 
   card: {
-    background: "#fff",
+    background: "#ffffffee",
     borderRadius: 18,
     border: "1px solid #e2e8f0",
     padding: 14,
     marginBottom: 14,
-    boxShadow: "0 8px 24px rgba(15,23,42,0.04)",
+    boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
   },
 
   sectionHead: {
@@ -866,8 +974,8 @@ const styles = {
     width: "100%",
     minHeight: 42,
     border: "none",
-    borderRadius: 12,
-    background: "#16a34a",
+    borderRadius: 14,
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     padding: "10px 14px",
     fontWeight: 800,

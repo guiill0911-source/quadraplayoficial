@@ -7,6 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCv98k0BgrYAAOasdevS_Kkr8A0NZUvkSk",
   authDomain: "quadraplayoficial.firebaseapp.com",
   projectId: "quadraplayoficial",
+  storageBucket: "quadraplayoficial.firebasestorage.app",
   messagingSenderId: "550982011848",
   appId: "1:550982011848:web:f6cdbff5b15c05454ccefd",
 };

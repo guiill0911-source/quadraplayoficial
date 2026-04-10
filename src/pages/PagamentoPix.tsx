@@ -49,7 +49,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f8fafc 0%, #dbeafe 24%, #eef4ff 52%, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
     paddingBottom: 40,
   } as CSSProperties,
 
@@ -76,8 +76,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: 30,
     padding: "28px 24px",
-    background:
-      "linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     boxShadow: "0 24px 70px rgba(15, 23, 42, 0.18)",
   } as CSSProperties,
@@ -182,7 +181,7 @@ const styles = {
     margin: 0,
     fontSize: 23,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
     letterSpacing: -0.3,
   } as CSSProperties,
 
@@ -229,7 +228,7 @@ const styles = {
     margin: 0,
     fontSize: 18,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
   } as CSSProperties,
 
   statusText: {
@@ -288,7 +287,7 @@ const styles = {
     padding: "0 18px",
     borderRadius: 16,
     border: "none",
-    background: "linear-gradient(135deg, #1d4ed8, #2563eb)",
+    background: "#053ff9",
     color: "#fff",
     fontWeight: 900,
     cursor: "pointer",
@@ -305,7 +304,7 @@ const styles = {
     padding: "0 18px",
     borderRadius: 16,
     border: "none",
-    background: "linear-gradient(135deg, #16a34a, #22c55e)",
+    background: "#8ae809",
     color: "#fff",
     fontWeight: 900,
     cursor: "pointer",
@@ -323,7 +322,7 @@ const styles = {
     borderRadius: 16,
     border: "1px solid #cbd5e1",
     background: "#fff",
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 800,
     cursor: "pointer",
     textDecoration: "none",
@@ -354,7 +353,7 @@ const styles = {
 
   summaryValue: {
     margin: "8px 0 0",
-    color: "#0f172a",
+    color: "#03122e",
     fontSize: 16,
     fontWeight: 900,
     lineHeight: 1.45,

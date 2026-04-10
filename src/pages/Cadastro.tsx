@@ -6,7 +6,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0%, #053ff9 100%)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -163,9 +163,11 @@ const styles = {
   } as const,
 
   cardWrap: {
-    display: "flex",
-    alignItems: "center",
-  } as const,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+} as const,
 
   card: {
     width: "100%",

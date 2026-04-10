@@ -56,6 +56,18 @@ const styles = {
     boxSizing: "border-box",
   } as const,
 
+  backLink: {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 8,
+  textDecoration: "none",
+  color: "#ffffff",
+  fontWeight: 700,
+  marginBottom: 16,
+  background: "transparent",
+  padding: 0,
+} as const,
+
   hero: {
     position: "relative" as const,
     overflow: "hidden",
@@ -1048,6 +1060,27 @@ const [toast, setToast] = useState<{
 
       <div style={styles.page}>
         <div style={styles.container}>
+          
+<button
+  type="button"
+  onClick={() => window.history.back()}
+  style={{
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+    background: "transparent",
+    border: "none",
+    padding: 0,
+    color: "#ffffff",
+    fontWeight: 700,
+    fontSize: 16,
+    cursor: "pointer",
+  }}
+>
+  ← Voltar ao painel
+</button>
+
          <section
   style={{
     ...styles.hero,

@@ -11,7 +11,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #0f172a 0px, #111827 180px, #f8fafc 180px, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
   },
 
   container: {
@@ -21,7 +21,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   hero: {
-    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     borderRadius: 24,
     padding: "26px 24px",
@@ -49,7 +49,7 @@ const styles: Record<string, React.CSSProperties> = {
   heroText: {
     marginTop: 12,
     marginBottom: 0,
-    color: "#cbd5e1",
+    color: "rgba(255,255,255,0.85)",
     fontSize: 15,
     lineHeight: 1.6,
     maxWidth: 760,
@@ -65,28 +65,28 @@ const styles: Record<string, React.CSSProperties> = {
   statusCard: {
     padding: 14,
     borderRadius: 16,
-    background: "#fff",
+    background: "#ffffff",
     border: "1px solid #e5e7eb",
-    color: "#0f172a",
+    color: "#03122e",
     minHeight: 88,
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    boxShadow: "0 8px 22px rgba(15,23,42,0.08)",
+    boxShadow: "0 10px 25px rgba(3,18,46,0.06)",
   },
 
   statusTitle: {
     margin: 0,
     fontSize: 14,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
   },
 
   statusMain: {
     marginTop: 6,
     fontSize: 15,
     fontWeight: 800,
-    color: "#0f172a",
+    color: "#03122e",
   },
 
   statusHint: {
@@ -146,8 +146,8 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 40,
     padding: "0 14px",
     borderRadius: 12,
-    background: "linear-gradient(135deg, #0f172a, #1e293b)",
-    color: "#fff",
+    background: "#8ae809",
+color: "#03122e",
     fontWeight: 900,
     fontSize: 13,
     textDecoration: "none",
@@ -164,8 +164,8 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 40,
     padding: "0 14px",
     borderRadius: 12,
-    background: "linear-gradient(135deg, #10b981, #059669)",
-    color: "#fff",
+    background: "#8ae809",
+    color: "#03122e",   
     fontWeight: 900,
     fontSize: 13,
     textDecoration: "none",
@@ -186,7 +186,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: {
     margin: 0,
     fontSize: 24,
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 900,
   },
 
@@ -223,19 +223,19 @@ const styles: Record<string, React.CSSProperties> = {
 
   cardTopBlue: {
     padding: 20,
-    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
   },
 
   cardTopGreen: {
     padding: 20,
-    background: "linear-gradient(135deg, #16a34a, #15803d)",
-    color: "#fff",
+    background: "#8ae809",
+color: "#fff",
   },
 
   cardTopDark: {
     padding: 20,
-    background: "linear-gradient(135deg, #0f172a, #1e293b)",
+    background: "#03122e",
     color: "#fff",
   },
 
@@ -283,7 +283,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 42,
     padding: "0 16px",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+    background: "#053ff9",
     color: "#fff",
     fontWeight: 900,
     boxShadow: "0 10px 20px rgba(37,99,235,0.18)",
@@ -296,7 +296,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 42,
     padding: "0 16px",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #10b981, #059669)",
+    background: "#8ae809",
     color: "#fff",
     fontWeight: 900,
     boxShadow: "0 10px 20px rgba(16,185,129,0.18)",
@@ -309,7 +309,7 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: 42,
     padding: "0 16px",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #0f172a, #1e293b)",
+    background: "#03122e",
     color: "#fff",
     fontWeight: 900,
     boxShadow: "0 10px 20px rgba(15,23,42,0.18)",
@@ -433,10 +433,10 @@ export default function CentralProprietario() {
                   ...styles.statusCard,
                   border:
                     saldo < 0
-                      ? "1px solid #fecaca"
-                      : saldo > 0
-                      ? "1px solid #bbf7d0"
-                      : "1px solid #e5e7eb",
+  ? "1px solid #ef4444"
+  : saldo > 0
+  ? "1px solid #8ae809"
+  : "1px solid #e5e7eb"
                 }}
               >
                 <h3 style={styles.statusTitle}>Saldo com a plataforma</h3>

@@ -221,7 +221,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #0f172a 0px, #111827 190px, #f8fafc 190px, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
   },
   container: {
     maxWidth: 1180,
@@ -229,7 +229,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "18px 16px 40px",
   },
   hero: {
-    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     borderRadius: 24,
     padding: "26px 24px",
@@ -290,7 +290,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 16px",
     borderRadius: 14,
     border: "none",
-    background: "linear-gradient(135deg, #10b981, #059669)",
+    background: "#8ae809",
     color: "#fff",
     fontWeight: 800,
     cursor: "pointer",
@@ -306,7 +306,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: {
     margin: 0,
     fontSize: 24,
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 900,
   },
   sectionText: {
@@ -361,13 +361,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sectionBox: {
     border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    background: "#ffffff",
     borderRadius: 18,
     padding: 16,
   },
   sectionBoxTitle: {
     margin: 0,
-    color: "#0f172a",
+    color: "#03122e",
     fontSize: 18,
     fontWeight: 900,
   },
@@ -441,7 +441,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
   },
   summaryValue: {
-    color: "#0f172a",
+    color: "#03122e",
     fontSize: 14,
     fontWeight: 900,
   },

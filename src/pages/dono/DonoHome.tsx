@@ -114,7 +114,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #0f172a 0px, #111827 190px, #f8fafc 190px, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 190px, #f8fafc 190px, #f8fafc 100%)",
   },
   container: {
     maxWidth: 1180,
@@ -122,7 +122,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "18px 16px 40px",
   },
   hero: {
-    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     borderRadius: 26,
     padding: "28px 24px",
@@ -147,7 +147,7 @@ const styles: Record<string, React.CSSProperties> = {
   heroText: {
     marginTop: 12,
     marginBottom: 0,
-    color: "#cbd5e1",
+    color: "rgba(255,255,255,0.85)",
     fontSize: 15,
     lineHeight: 1.65,
     maxWidth: 760,
@@ -163,8 +163,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 16px",
     borderRadius: 14,
     border: "none",
-    background: "linear-gradient(135deg, #22c55e, #16a34a)",
-    color: "#fff",
+    background: "#8ae809",
+    color: "#03122e",
     fontWeight: 800,
     cursor: "pointer",
     boxShadow: "0 12px 24px rgba(34,197,94,0.22)",
@@ -190,7 +190,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionTitle: {
     margin: 0,
     fontSize: 24,
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 900,
   },
   sectionText: {
@@ -241,7 +241,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #e2e8f0",
     borderRadius: 18,
     padding: 16,
-    background: "linear-gradient(180deg, #ffffff, #f8fafc)",
+    background: "#ffffff",
     boxShadow: "0 8px 18px rgba(15,23,42,0.04)",
   },
   metricLabel: {
@@ -293,7 +293,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   quadraName: {
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
     fontSize: 17,
   },
   quadraMeta: {
@@ -351,7 +351,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 12px",
     borderRadius: 10,
     border: "none",
-    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+    background: "#053ff9",
     color: "#fff",
     fontWeight: 800,
     cursor: "pointer",
@@ -362,7 +362,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "0 12px",
     borderRadius: 10,
     border: "none",
-    background: "linear-gradient(135deg, #10b981, #059669)",
+    background: "#8ae809",
     color: "#fff",
     fontWeight: 800,
     cursor: "pointer",
@@ -400,7 +400,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 0 6px",
     fontSize: 24,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
   },
   quadraCity: {
     color: "#334155",

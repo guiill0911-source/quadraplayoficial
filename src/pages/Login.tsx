@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import logoQuadraPlay from "../assets/logo.png";
 import {
   confirmarCodigoCelular,
   criarRecaptcha,
@@ -15,7 +16,7 @@ const styles = {
 page: {
   minHeight: "100vh",
   background:
-    "linear-gradient(180deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%)",
+  "linear-gradient(180deg, #03122e 0%, #053ff9 100%)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -595,19 +596,43 @@ useEffect(() => {
     <>
 
 
+
       <div
   style={{
     ...styles.page,
-    alignItems:
-      typeof window !== "undefined" && window.innerWidth <= 768
-        ? "flex-start"
-        : styles.page.alignItems,
+    alignItems: "center",
     padding:
       typeof window !== "undefined" && window.innerWidth <= 768
         ? "10px 12px 20px"
         : styles.page.padding,
   }}
 >
+
+  <div
+  style={{
+    textAlign: "center",
+    marginBottom: 20,
+  }}
+>
+  <img
+    src={logoQuadraPlay}
+    alt="Quadra Play"
+    style={{
+      width: 110,
+      marginBottom: 6,
+    }}
+  />
+  <div
+    style={{
+      color: "#fff",
+      fontWeight: 900,
+      letterSpacing: 1,
+    }}
+  >
+    QUADRA PLAY
+  </div>
+</div>
+
 <div
   style={{
     ...styles.card,
@@ -650,6 +675,7 @@ useEffect(() => {
                 }}
               >
                 <div style={styles.cardTop}>
+
                   <h2
                     style={{
                       ...styles.cardTitle,

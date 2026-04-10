@@ -71,7 +71,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%)",
+  "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
     paddingBottom: 40,
   } as const,
 
@@ -89,7 +89,7 @@ const styles = {
     alignItems: "center",
     gap: 8,
     textDecoration: "none",
-    color: "#0f172a",
+    color: "#ffffff",
     fontWeight: 700,
     marginBottom: 16,
   } as const,
@@ -99,8 +99,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: 28,
     padding: "28px 24px",
-    background:
-      "linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     boxShadow: "0 22px 60px rgba(15, 23, 42, 0.18)",
   },
@@ -199,7 +198,7 @@ const styles = {
     margin: 0,
     fontSize: 18,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
     letterSpacing: -0.3,
   } as const,
 
@@ -220,7 +219,7 @@ const styles = {
     borderRadius: 18,
     padding: 16,
     border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    background: "#ffffff",
   } as const,
 
   statLabel: {
@@ -237,7 +236,7 @@ const styles = {
     fontSize: 30,
     fontWeight: 900,
     lineHeight: 1,
-    color: "#0f172a",
+    color: "#03122e",
   } as const,
 
   toolbar: {
@@ -277,7 +276,7 @@ const styles = {
   greenBtn: {
     border: "none",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+    background: "#8ae809",
     color: "#fff",
     padding: "12px 16px",
     fontWeight: 800,
@@ -350,7 +349,7 @@ const styles = {
     margin: 0,
     fontSize: 18,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
     letterSpacing: -0.2,
   } as const,
 
@@ -390,7 +389,7 @@ const styles = {
   infoBox: {
     borderRadius: 18,
     border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    background: "#ffffff",
     padding: 14,
   } as const,
 
@@ -1022,7 +1021,7 @@ return;
                       marginTop: 14,
                       padding: 14,
                       borderRadius: 16,
-                      background: "#f8fafc",
+                      background: "#ffffff",
                       border: "1px solid #e2e8f0",
                       color: "#475569",
                       fontWeight: 700,

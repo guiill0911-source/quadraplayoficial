@@ -5,7 +5,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top left, rgba(37,99,235,0.10), transparent 28%), radial-gradient(circle at top right, rgba(15,23,42,0.14), transparent 24%), linear-gradient(180deg, #f8fafc 0%, #eef4ff 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
   } as const,
 
   container: {
@@ -19,7 +19,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: 28,
     padding: "32px 24px",
-    background: "linear-gradient(135deg, #0f172a 0%, #172554 58%, #1d4ed8 100%)",
+    background: "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     boxShadow: "0 24px 80px rgba(15, 23, 42, 0.22)",
   },
@@ -115,7 +115,7 @@ const styles = {
   } as const,
 
   sectionBox: {
-    background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
+    background: "#ffffff",
     border: "1px solid #e2e8f0",
     borderRadius: 20,
     padding: 20,
@@ -125,14 +125,14 @@ const styles = {
   sectionTitle: {
     margin: "0 0 10px",
     fontSize: 22,
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 900,
   } as const,
 
   sectionSubtitle: {
     margin: "0 0 10px",
     fontSize: 18,
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 800,
   } as const,
 
@@ -186,7 +186,7 @@ const styles = {
     padding: "12px 18px",
     borderRadius: 14,
     border: "none",
-    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+    background: "#053ff9",
     color: "#fff",
     fontWeight: 800,
     fontSize: 15,
@@ -199,7 +199,7 @@ const styles = {
     borderRadius: 14,
     border: "1px solid #cbd5e1",
     background: "#fff",
-    color: "#0f172a",
+    color: "#03122e",
     fontWeight: 800,
     fontSize: 15,
     cursor: "pointer",

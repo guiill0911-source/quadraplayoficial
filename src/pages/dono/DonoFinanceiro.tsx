@@ -64,7 +64,7 @@ const styles = {
   page: {
     minHeight: "100vh",
     background:
-      "linear-gradient(180deg, #f8fafc 0%, #eef4ff 45%, #f8fafc 100%)",
+      "linear-gradient(180deg, #03122e 0px, #053ff9 180px, #f8fafc 180px, #f8fafc 100%)",
     paddingBottom: 40,
   } as const,
 
@@ -82,7 +82,7 @@ const styles = {
     alignItems: "center",
     gap: 8,
     textDecoration: "none",
-    color: "#0f172a",
+    color: "#ffffff",
     fontWeight: 700,
     marginBottom: 16,
   } as const,
@@ -93,7 +93,7 @@ const styles = {
     borderRadius: 28,
     padding: "28px 24px",
     background:
-      "linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #38bdf8 100%)",
+      "linear-gradient(135deg, #053ff9, #2563eb)",
     color: "#fff",
     boxShadow: "0 22px 60px rgba(15, 23, 42, 0.18)",
   },
@@ -192,7 +192,7 @@ const styles = {
     margin: 0,
     fontSize: 18,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
     letterSpacing: -0.3,
   } as const,
 
@@ -238,8 +238,8 @@ const styles = {
   greenBtn: {
     border: "none",
     borderRadius: 14,
-    background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
-    color: "#fff",
+    background: "#8ae809",
+    color: "#03122e",
     padding: "12px 16px",
     fontWeight: 800,
     cursor: "pointer",
@@ -249,8 +249,8 @@ const styles = {
   neutralBtn: {
     border: "1px solid #cbd5e1",
     borderRadius: 14,
-    background: "#fff",
-    color: "#0f172a",
+    background: "#ffffff",
+    color: "#03122e",
     padding: "12px 16px",
     fontWeight: 800,
     cursor: "pointer",
@@ -259,7 +259,7 @@ const styles = {
   darkGhostBtn: {
     border: "1px solid #1e293b",
     borderRadius: 14,
-    background: "#0f172a",
+    background: "#03122e",
     color: "#fff",
     padding: "12px 16px",
     fontWeight: 800,
@@ -316,7 +316,7 @@ const styles = {
     fontSize: 28,
     fontWeight: 900,
     lineHeight: 1.05,
-    color: "#0f172a",
+    color: "#03122e",
     letterSpacing: -0.5,
   } as const,
 
@@ -338,7 +338,7 @@ const styles = {
     borderRadius: 18,
     padding: 16,
     border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    background: "#ffffff",
   } as const,
 
   miniLabel: {
@@ -438,7 +438,7 @@ const styles = {
     margin: 0,
     fontSize: 17,
     fontWeight: 900,
-    color: "#0f172a",
+    color: "#03122e",
   } as const,
 
   reservaSub: {
@@ -458,7 +458,7 @@ const styles = {
   moneyBox: {
     borderRadius: 16,
     border: "1px solid #e2e8f0",
-    background: "#f8fafc",
+    background: "#ffffff",
     padding: 12,
   } as const,
 

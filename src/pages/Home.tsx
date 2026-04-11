@@ -621,17 +621,63 @@ const valor =
     [comodidadesBusca, chipsComodidades]
   );
 
+ const cidadesDisponiveis = useMemo(() => {
+  const mapa = new Map<string, string>();
+
+  for (const q of quadras) {
+    const cidadeRaw = (q.cidade ?? "").trim();
+    const ufRaw = ((q as any).uf ?? "").trim().toUpperCase();
+    const cidadeExibicaoRaw = ((q as any).cidadeExibicao ?? "").trim();
+
+    if (!cidadeRaw) continue;
+
+    const cidadeSemUf = cidadeRaw.replace(/\s*-\s*[A-Za-z]{2}$/, "").trim();
+
+    const chave = cidadeSemUf
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    const valorExibicaoBase =
+      cidadeExibicaoRaw ||
+      (ufRaw ? `${cidadeSemUf} - ${ufRaw}` : cidadeSemUf);
+
+    if (!mapa.has(chave)) {
+      mapa.set(chave, valorExibicaoBase);
+    } else {
+      const existente = mapa.get(chave)!;
+
+      const novoTemAcento = /[^\u0000-\u007f]/.test(valorExibicaoBase);
+      const existenteTemAcento = /[^\u0000-\u007f]/.test(existente);
+
+      if (novoTemAcento && !existenteTemAcento) {
+        mapa.set(chave, valorExibicaoBase);
+      }
+    }
+  }
+
+  return Array.from(mapa.values()).sort((a, b) =>
+    a.localeCompare(b, "pt-BR")
+  );
+}, [quadras]);
+
   const quadrasFiltradas = useMemo(() => {
     let lista = quadras.filter((q) => q.ativo !== false);
 
     if (buscaAtiva && cidadeBusca.trim()) {
-      const cidadeBuscaNormalizada = normalizarTexto(cidadeBusca);
+  const cidadeBuscaNormalizada = normalizarTexto(cidadeBusca);
 
-      lista = lista.filter((q) =>
-        normalizarTexto(q.cidade ?? "").includes(cidadeBuscaNormalizada)
-      );
-    }
+  lista = lista.filter((q) => {
+    const cidadeBase = (q.cidade ?? "").trim();
+    const ufBase = ((q as any).uf ?? "").trim().toUpperCase();
+    const cidadeExibicaoBase = ((q as any).cidadeExibicao ?? "").trim();
 
+    const valorComparacao =
+      cidadeExibicaoBase || (ufBase ? `${cidadeBase} - ${ufBase}` : cidadeBase);
+
+    return normalizarTexto(valorComparacao) === cidadeBuscaNormalizada;
+  });
+}
     if (buscaAtiva && quadraIdsDisponiveis) {
       lista = lista.filter((q) => quadraIdsDisponiveis.has(q.id));
     }
@@ -1578,22 +1624,29 @@ color: chipPertoDeMim ? "#ffffff" : "#053ff9",
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
 
 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-  <button
-    type="button"
-    onClick={() => setOrdenacao((prev) => (prev === "preco" ? "padrao" : "preco"))}
+  <label
     style={{
-      minHeight: 42,
-      padding: "0 14px",
+      display: "inline-flex",
+      gap: 8,
+      alignItems: "center",
+      padding: "10px 12px",
       borderRadius: 999,
-      border: ordenacao === "preco" ? "1px solid #f59e0b" : "1px solid #e2e8f0",
-      background: ordenacao === "preco" ? "#fff7ed" : "#fff",
-      color: ordenacao === "preco" ? "#c2410c" : "#334155",
-      fontWeight: 800,
+      background: ordenacao === "preco" ? "#dbeafe" : "#fff",
+      border: ordenacao === "preco" ? "1px solid #93c5fd" : "1px solid #e2e8f0",
+      color: ordenacao === "preco" ? "#1d4ed8" : "#334155",
+      fontWeight: 700,
       cursor: "pointer",
     }}
   >
-    🔥 Melhores preços
-  </button>
+    <input
+      type="checkbox"
+      checked={ordenacao === "preco"}
+      onChange={() =>
+        setOrdenacao((prev) => (prev === "preco" ? "padrao" : "preco"))
+      }
+    />
+    Melhores preços
+  </label>
 </div>
 
 
@@ -1674,20 +1727,26 @@ color: chipPertoDeMim ? "#ffffff" : "#053ff9",
                   </div>
 
                   <div style={{ display: "grid", gap: 6 }}>
-                    <strong style={{ color: "#0f172a" }}>Cidade</strong>
-                    <input
-                      value={cidadeInput}
-                      onChange={(e) => setCidadeInput(e.target.value)}
-                      placeholder="Ex: Itajaí"
-                      style={{
-                        minHeight: 46,
-                        borderRadius: 14,
-                        border: "1px solid #cbd5e1",
-                        padding: "0 14px",
-                        background: "#fff",
-                      }}
-                    />
-                  </div>
+  <strong style={{ color: "#0f172a" }}>Cidade</strong>
+  <select
+    value={cidadeInput}
+    onChange={(e) => setCidadeInput(e.target.value)}
+    style={{
+      minHeight: 46,
+      borderRadius: 14,
+      border: "1px solid #cbd5e1",
+      padding: "0 14px",
+      background: "#fff",
+    }}
+  >
+    <option value="">Qualquer</option>
+    {cidadesDisponiveis.map((cidade) => (
+      <option key={cidade} value={cidade}>
+        {cidade}
+      </option>
+    ))}
+  </select>
+</div>
                 </div>
 
                 <div style={{ display: "grid", gap: 8 }}>

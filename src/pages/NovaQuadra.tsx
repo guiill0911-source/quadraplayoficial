@@ -928,6 +928,17 @@ useEffect(() => {
         );
       }
 
+      const ufNormalizada = uf.trim().toUpperCase();
+
+const cidadeNormalizada = cidade
+  .trim()
+  .replace(/\s*-\s*[A-Za-z]{2}$/, "")
+  .trim();
+
+const cidadeExibicao = ufNormalizada
+  ? `${cidadeNormalizada} - ${ufNormalizada}`
+  : cidadeNormalizada;
+
       await setDoc(quadraRef, {
         ownerId: uid,
         nome: nome.trim(),
@@ -935,8 +946,9 @@ useEffect(() => {
         rua: rua.trim(),
         numero: numero.trim(),
         bairro: bairro.trim(),
-        uf: uf.trim(),
-        cidade: cidade.trim(),
+        uf: ufNormalizada,
+        cidade: cidadeNormalizada,
+        cidadeExibicao,
         endereco: enderecoStr,
         observacoes: observacoes.trim(),
         latitude,

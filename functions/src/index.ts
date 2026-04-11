@@ -2354,7 +2354,7 @@ export const enviarEmailVerificacaoCustom = onCall(
 
               <a href="${link}" style="
                 display:inline-block;
-                background:linear-gradient(135deg,#111827 0%,#0f172a 100%);
+                background:#053ff9;
                 color:#ffffff;
                 text-decoration:none;
                 padding:14px 22px;

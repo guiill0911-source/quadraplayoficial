@@ -503,7 +503,7 @@ useEffect(() => {
     setMsg("");
 
     if (!email.trim() || !senha) {
-      setErro("Preencha email e senha.");
+      setErro("Preencha e-mail e senha para continuar.");
       return;
     }
 
@@ -512,8 +512,20 @@ useEffect(() => {
       await loginComEmail(email.trim(), senha);
       nav("/home");
     } catch (e: any) {
-      setErro(e?.message ?? "Erro ao entrar.");
-    } finally {
+  const codigo = e?.code;
+
+  if (codigo === "auth/invalid-email") {
+    setErro("E-mail inválido. Verifique e tente novamente.");
+  } else if (codigo === "auth/user-not-found") {
+    setErro("Conta não encontrada. Verifique o e-mail ou crie uma nova conta.");
+  } else if (codigo === "auth/wrong-password") {
+    setErro("Senha incorreta. Tente novamente.");
+  } else if (codigo === "auth/too-many-requests") {
+    setErro("Muitas tentativas. Tente novamente mais tarde.");
+  } else {
+    setErro("Não foi possível entrar. Tente novamente.");
+  }
+}{
       setLoading(false);
     }
   }

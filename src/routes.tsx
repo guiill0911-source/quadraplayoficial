@@ -39,7 +39,7 @@ import CeoFinanceiro from "./pages/ceo/CeoFinanceiro";
 import CeoDashboard from "./pages/ceo/CeoDashboard";
 
 function WhatsAppButton() {
-  const numero = "5551999999999";
+  const numero = "5551992144879";
   const mensagem = encodeURIComponent(
     "Olá! Vim pelo Quadra Play e preciso de ajuda."
   );

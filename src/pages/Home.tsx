@@ -13,6 +13,24 @@ import {
 import { db } from "../services/firebase";
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
 
+if (typeof document !== "undefined" && !document.getElementById("qp-install-card-anim")) {
+  const styleAnim = document.createElement("style");
+  styleAnim.id = "qp-install-card-anim";
+  styleAnim.innerHTML = `
+    @keyframes qpInstallSlideUp {
+      from {
+        transform: translateY(18px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(styleAnim);
+}
+
 type Comodidades = {
   chuveiro?: boolean;
   churrasqueira?: boolean;
@@ -260,6 +278,14 @@ export default function Home() {
   const [favoritaSavingId, setFavoritaSavingId] = useState<string | null>(null);
 
   const [hoveredQuadraId, setHoveredQuadraId] = useState<string | null>(null);
+  const isIosSafari =
+  /iPhone|iPad|iPod/i.test(navigator.userAgent) &&
+  /Safari/i.test(navigator.userAgent) &&
+  !/CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent);
+
+const [mostrarInstallCard, setMostrarInstallCard] = useState(
+  isIosSafari && localStorage.getItem("qp_install_card_closed") !== "true"
+);
   const [hoveredButton, setHoveredButton] = useState<
     null | "geo" | "disableGeo" | "buscarQuadra"
   >(null);
@@ -703,6 +729,233 @@ if (score >= 90) {
     <>
       <Header />
 
+{mostrarInstallCard ? (
+  <div
+    style={{
+      position: "fixed",
+      left: 12,
+      right: 12,
+      bottom: 104,
+      zIndex: 9998,
+      display: "flex",
+      justifyContent: "center",
+      pointerEvents: "none",
+      animation: "qpInstallSlideUp 0.35s ease",
+    }}
+  >
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        maxWidth: 390,
+        background: "linear-gradient(135deg, rgba(5,63,249,0.92), rgba(3,18,46,0.92))",
+        color: "#ffffff",
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.12)",
+        boxShadow: "0 20px 50px rgba(2, 6, 23, 0.42)",
+        padding: "12px 12px 10px",
+        pointerEvents: "auto",
+        backdropFilter: "blur(16px)",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => {
+  localStorage.setItem("qp_install_card_closed", "true");
+  setMostrarInstallCard(false);
+}}
+        aria-label="Fechar tutorial de instalação"
+        style={{
+          position: "absolute",
+          right: 10,
+          top: 8,
+          width: 34,
+          height: 34,
+          borderRadius: 999,
+          border: "none",
+          background: "transparent",
+          color: "#ffffff",
+          fontSize: 24,
+          lineHeight: 1,
+          cursor: "pointer",
+          opacity: 0.92,
+        }}
+      >
+        ×
+      </button>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "64px 1fr",
+          gap: 14,
+          alignItems: "start",
+        }}
+      >
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: 18,
+            background: "#8ae809",
+            color: "#03122e",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 30,
+            fontWeight: 900,
+            flexShrink: 0,
+          }}
+        >
+          ↓
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: 17,
+              fontWeight: 900,
+              lineHeight: 1.15,
+              marginBottom: 8,
+              paddingRight: 28,
+            }}
+          >
+            Instalar Quadra Play
+          </div>
+
+          <div
+            style={{
+              fontSize: 13,
+              color: "#d4d4d8",
+              lineHeight: 1.45,
+              marginBottom: 12,
+            }}
+          >
+            Para instalar o app no seu iPhone:
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "30px 1fr",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.10)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 14,
+                }}
+              >
+                1
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.4,
+                  color: "#ffffff",
+                  fontWeight: 700,
+                }}
+              >
+                Toque em{" "}
+                <span style={{ color: "#60a5fa", fontWeight: 900 }}>⇪</span>{" "}
+                Compartilhar
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "30px 1fr",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.10)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 14,
+                }}
+              >
+                2
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.4,
+                  color: "#ffffff",
+                  fontWeight: 700,
+                }}
+              >
+                Role e toque em{" "}
+                <span style={{ color: "#60a5fa", fontWeight: 900 }}>＋</span>{" "}
+                Adicionar à Tela de Início
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "30px 1fr",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.10)",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 900,
+                  fontSize: 14,
+                }}
+              >
+                3
+              </div>
+
+              <div
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.4,
+                  color: "#ffffff",
+                  fontWeight: 700,
+                }}
+              >
+                Toque em Adicionar
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+) : null}
+
       <div
         style={{
           minHeight: "100vh",
@@ -982,7 +1235,7 @@ if (score >= 90) {
                       background: "linear-gradient(135deg, #8ae809 0%, #6fd306 100%)",
                       color: "#ffffff",
                       fontWeight: 900,
-                      fontSize: 18,
+                      fontSize: 16,
                       letterSpacing: 0.2,
                       cursor: "pointer",
                       boxShadow:
@@ -1173,7 +1426,7 @@ if (score >= 90) {
     top: 0,
     bottom: 0,
     width: 24,
-    background: "linear-gradient(to left, #ffffff, transparent)",
+    background: "linear-gradient(to right, #ffffff, transparent)",
     zIndex: 2,
     pointerEvents: "none",
   }}
@@ -1187,7 +1440,7 @@ if (score >= 90) {
     top: 0,
     bottom: 0,
     width: 24,
-    background: "linear-gradient(to right, #ffffff, transparent)",
+    background: "linear-gradient(to left, #ffffff, transparent)",
     zIndex: 2,
     pointerEvents: "none",
   }}

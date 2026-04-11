@@ -480,48 +480,62 @@ export default function Cadastro() {
   }
 
   async function criar() {
-    setErro("");
+  setErro("");
 
-    const nomeLimpo = nome.trim();
-    const sobrenomeLimpo = sobrenome.trim();
-    const emailLimpo = email.trim();
-    const cpfLimpo = cpf.trim();
-    const telefoneNumeros = telefoneSomenteNumeros(telefone);
+  const nomeLimpo = nome.trim();
+  const sobrenomeLimpo = sobrenome.trim();
+  const emailLimpo = email.trim();
+  const cpfLimpo = cpf.trim();
+  const telefoneNumeros = telefoneSomenteNumeros(telefone);
 
-    if (!nomeLimpo || !sobrenomeLimpo || !telefoneNumeros || !emailLimpo || !senha) {
-      setErro("Preencha celular, email e senha.");
-      return;
-    }
-
-    if (telefoneNumeros.length < 10 || telefoneNumeros.length > 11) {
-      setErro("Informe um celular válido com DDD.");
-      return;
-    }
-
-    if (!senhaValida) {
-      setErro("A senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula e número.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await cadastrarComEmail({
-        nome: nomeLimpo,
-        sobrenome: sobrenomeLimpo,
-        cpf: cpfLimpo ? cpfLimpo : undefined,
-        telefone: telefoneNumeros,
-        role,
-        email: emailLimpo,
-        senha,
-      });
-
-      nav("/");
-    } catch (e: any) {
-      setErro(e?.message ?? "Erro ao cadastrar.");
-    } finally {
-      setLoading(false);
-    }
+  if (!nomeLimpo || !sobrenomeLimpo || !telefoneNumeros || !emailLimpo || !senha) {
+    setErro("Preencha celular, email e senha.");
+    return;
   }
+
+  if (telefoneNumeros.length < 10 || telefoneNumeros.length > 11) {
+    setErro("Informe um celular válido com DDD.");
+    return;
+  }
+
+  if (!senhaValida) {
+    setErro("A senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula e número.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    await cadastrarComEmail({
+      nome: nomeLimpo,
+      sobrenome: sobrenomeLimpo,
+      // cpf removido daqui
+      telefone: telefoneNumeros,
+      role,
+      email: emailLimpo,
+      senha,
+    });
+
+    // 🔥 AQUI MUDA TUDO
+    nav("/verificar-email");
+
+  } catch (e: any) {
+
+    // 🔥 SE FOR ERRO DE PERMISSÃO DO FIRESTORE
+    if (
+      e?.message?.includes("Missing or insufficient permissions") ||
+      e?.code === "permission-denied"
+    ) {
+      // TRATA COMO SUCESSO
+      nav("/verificar-email");
+      return;
+    }
+
+    setErro(e?.message ?? "Erro ao cadastrar.");
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <div style={styles.page}>
@@ -641,16 +655,6 @@ export default function Cadastro() {
                 </>
               ) : (
                 <>
-                  <div style={styles.field}>
-                    <label style={styles.label}>CPF</label>
-                    <input
-                      placeholder="CPF (opcional no MVP)"
-                      value={cpf}
-                      onChange={(e) => setCpf(e.target.value)}
-                      style={styles.input}
-                    />
-                  </div>
-
                   <div style={styles.field}>
                     <label style={styles.label}>Celular</label>
                     <input

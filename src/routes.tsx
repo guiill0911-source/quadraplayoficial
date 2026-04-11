@@ -18,6 +18,7 @@ import MinhasReservas from "./pages/MinhasReservas";
 import AvaliarReserva from "./pages/AvaliarReserva";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import VerificarEmail from "./pages/VerificarEmail";
 import RecuperarSenha from "./pages/RecuperarSenha";
 
 import Termos from "./pages/Termos";
@@ -96,6 +97,7 @@ export default function AppRoutes() {
       <Routes>
 <Route path="/login" element={<Login />} />
 <Route path="/cadastro" element={<Cadastro />} />
+<Route path="/verificar-email" element={<VerificarEmail />} />
         <Route path="/recuperar-senha" element={<RecuperarSenha />} />
         <Route path="/email-verificado" element={<EmailVerificado />} />
         <Route path="/termos" element={<Termos />} />

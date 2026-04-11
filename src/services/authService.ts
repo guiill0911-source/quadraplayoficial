@@ -27,10 +27,100 @@ import {
 
 const functions = getFunctions(app, "us-central1");
 
+const PENDING_PROFILE_KEY = "qp_pending_profile";
+
+type PendingProfile = {
+  email: string;
+  nome: string;
+  sobrenome: string;
+  cpf?: string | null;
+  telefone: string;
+  role: UserRole;
+};
+
+function salvarPendingProfile(data: PendingProfile) {
+  localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(data));
+}
+
+export function lerPendingProfile(): PendingProfile | null {
+  try {
+    const raw = localStorage.getItem(PENDING_PROFILE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as PendingProfile;
+  } catch {
+    return null;
+  }
+}
+
+export function limparPendingProfile() {
+  localStorage.removeItem(PENDING_PROFILE_KEY);
+}
+
+async function criarDocUsuarioBase(
+  user: User,
+  params: {
+    email: string;
+    nome: string;
+    sobrenome: string;
+    cpf?: string | null;
+    telefone: string;
+    role: UserRole;
+  }
+) {
+  const telefoneNormalizado = normalizarTelefoneBR(params.telefone);
+
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      nome: params.nome,
+      sobrenome: params.sobrenome,
+      cpf: params.cpf ?? null,
+      telefone: telefoneNormalizado,
+      telefoneNormalizado,
+      telefoneVerificado: false,
+      emailVerificado: !!user.emailVerified,
+      role: params.role,
+      email: params.email,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+
+      mpOAuthConnected: false,
+      mpConnectionStatus: "not_connected",
+      mpConnectedAt: null,
+    },
+    { merge: true }
+  );
+}
+
 const enviarEmailVerificacaoCustom = httpsCallable<
   { email: string; nome: string },
   { ok: boolean }
 >(functions, "enviarEmailVerificacaoCustom");
+
+export async function reenviarEmailVerificacao() {
+  const user = auth.currentUser;
+
+  if (!user || !user.email) {
+    throw new Error("Nenhum usuário logado foi encontrado para reenviar o e-mail.");
+  }
+
+  let nome = "Quadra Play";
+
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      const data = snap.data() as any;
+      nome = String(data?.nome ?? "Quadra Play");
+    }
+  } catch {
+    // se falhar ler o perfil, segue com nome padrão
+  }
+
+  await enviarEmailVerificacaoCustom({
+    email: user.email,
+    nome,
+  });
+}
 
 export type UserRole = "atleta" | "dono";
 
@@ -97,7 +187,25 @@ export async function cadastrarComEmail(params: {
     throw new Error("Informe um celular válido com DDD.");
   }
 
+  salvarPendingProfile({
+    email,
+    nome,
+    sobrenome,
+    cpf,
+    telefone: telefoneNormalizado,
+    role: params.role,
+  });
+
   const cred = await createUserWithEmailAndPassword(auth, email, params.senha);
+
+  await criarDocUsuarioBase(cred.user, {
+    email,
+    nome,
+    sobrenome,
+    cpf,
+    telefone: telefoneNormalizado,
+    role: params.role,
+  });
 
   if (cred.user && !cred.user.emailVerified) {
     await enviarEmailVerificacaoCustom({
@@ -105,25 +213,6 @@ export async function cadastrarComEmail(params: {
       nome,
     });
   }
-
-  await setDoc(doc(db, "users", cred.user.uid), {
-    nome,
-    sobrenome,
-    cpf,
-    telefone: telefoneNormalizado,
-    telefoneNormalizado,
-    telefoneVerificado: false,
-    emailVerificado: !!cred.user.emailVerified,
-    role: params.role,
-    email,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-
-    // 🔥 BASE MERCADO PAGO
-    mpOAuthConnected: false,
-    mpConnectionStatus: "not_connected",
-    mpConnectedAt: null,
-  });
 
   return cred.user;
 }

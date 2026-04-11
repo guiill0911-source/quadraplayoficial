@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../services/firebase";
 import { TERMOS_VERSAO_ATUAL } from "../config/termos";
 import Header from "../components/Header";
+import { lerPendingProfile, limparPendingProfile } from "../services/authService";
 
 const styles = {
   page: {
@@ -26,7 +27,7 @@ const styles = {
     overflow: "hidden",
     borderRadius: 28,
     padding: "32px 24px",
-    background: "linear-gradient(135deg, #0f172a 0%, #1d4ed8 52%, #22c55e 100%)",
+    background: "linear-gradient(135deg, #03122e 0%, #053ff9 62%, #8ae809 100%)",
     color: "#fff",
     boxShadow: "0 24px 80px rgba(15, 23, 42, 0.22)",
   },
@@ -109,11 +110,11 @@ const styles = {
   } as const,
 
   contentGrid: {
-    display: "grid",
-    gridTemplateColumns: "1.15fr 0.85fr",
-    gap: 18,
-    marginTop: 20,
-  } as const,
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 18,
+  marginTop: 20,
+} as const,
 
   card: {
     background: "#fff",
@@ -219,7 +220,7 @@ const styles = {
     padding: "14px 18px",
     borderRadius: 16,
     border: "none",
-    background: "linear-gradient(135deg, #2563eb 0%, #16a34a 100%)",
+    background: "linear-gradient(135deg, #053ff9 0%, #8ae809 100%)",
     color: "#fff",
     fontWeight: 900,
     fontSize: 15,
@@ -345,15 +346,45 @@ export default function AceiteTermos() {
     setSaving(true);
     try {
       const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        const pending = lerPendingProfile();
+
+       await setDoc(
+  ref,
+  {
+    nome: pending?.nome || user.displayName || "Usuário",
+    sobrenome: pending?.sobrenome || "",
+    cpf: pending?.cpf || null,
+    telefone: pending?.telefone || "",
+    telefoneNormalizado: pending?.telefone || "",
+    telefoneVerificado: false,
+    emailVerificado: !!user.emailVerified,
+    role: pending?.role || "atleta",
+    email: pending?.email || user.email || "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    mpOAuthConnected: false,
+    mpConnectionStatus: "not_connected",
+    mpConnectedAt: null,
+  },
+  { merge: true }
+);
+      }
+
       await setDoc(
         ref,
         {
           termosAceitosEm: serverTimestamp(),
           versaoTermosAceitos: TERMOS_VERSAO_ATUAL,
+          emailVerificado: !!user.emailVerified,
+          updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
+      limparPendingProfile();
       navigate(from, { replace: true });
     } finally {
       setSaving(false);

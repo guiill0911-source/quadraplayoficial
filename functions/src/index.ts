@@ -1326,9 +1326,9 @@ export const verifyAndBindCpf = onCall(
     const userSnap = await userRef.get();
     const userData = userSnap.exists ? (userSnap.data() as any) : null;
 
-    if (userData?.cpfHash) {
-      return { ok: true, alreadyBound: true, cpfUltimos4: String(userData?.cpfUltimos4 ?? "****") };
-    }
+    if (userData?.cpfHash && userData.cpfHash === cpfHash) {
+  return { ok: true, alreadyBound: true, cpfUltimos4: String(userData?.cpfUltimos4 ?? "****") };
+}
 
     const dupSnap = await db.collection("users").where("cpfHash", "==", cpfHash).limit(1).get();
     if (!dupSnap.empty) {
@@ -2274,7 +2274,7 @@ export const enviarEmailVerificacaoCustom = onCall(
     });
 
     const resultado = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "Quadra Play <noreply@quadraplayoficial.com.br>",
       to: email,
       subject: "Confirme seu e-mail no Quadra Play 🚀",
       html: `

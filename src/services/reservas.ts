@@ -317,72 +317,77 @@ export async function cancelarReserva(args: {
 
   let deveTentarReembolso = false;
 
-  await runTransaction(db, async (tx) => {
-    const snap = await tx.get(reservaRef);
-    if (!snap.exists()) throw new Error("Reserva não encontrada.");
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(reservaRef);
+      if (!snap.exists()) throw new Error("Reserva não encontrada.");
 
-    const r: any = snap.data();
-    const status = String(r.status ?? "");
+      const r: any = snap.data();
+      const status = String(r.status ?? "");
 
-    if (status === "cancelada") return;
-    if (status === "finalizada") throw new Error("Não é possível cancelar uma reserva finalizada.");
+      if (status === "cancelada") return;
+      if (status === "finalizada") throw new Error("Não é possível cancelar uma reserva finalizada.");
 
-    const clienteUid = String(r.clienteUid ?? "");
-    const isMesmoCliente = clienteUid && clienteUid === user.uid;
+      const clienteUid = String(r.clienteUid ?? "");
+      const isMesmoCliente = clienteUid && clienteUid === user.uid;
 
-    if (!args.bypassClienteUidCheck) {
-      if (!isMesmoCliente) {
-        throw new Error("Você não pode cancelar uma reserva de outro usuário.");
+      if (!args.bypassClienteUidCheck) {
+        if (!isMesmoCliente) {
+          throw new Error("Você não pode cancelar uma reserva de outro usuário.");
+        }
       }
-    }
 
-    // ✅ TODAS AS LEITURAS PRIMEIRO
-    const quadraId = String(r.quadraId ?? "");
-    const comissaoPercentual = await lerComissaoPercentualQuadraTx(tx, quadraId);
+      const quadraId = String(r.quadraId ?? "");
+      const comissaoPercentual = await lerComissaoPercentualQuadraTx(tx, quadraId);
 
-    const valorReais = Number(r.valorPago ?? r.valor ?? 0);
+      const valorReais = Number(r.valorPago ?? r.valor ?? 0);
 
-    const startAt =
-      asTimestampMaybe(r.startAt) ??
-      (r.data && r.horaInicio
-        ? combineDateTimeToTimestamp(String(r.data), String(r.horaInicio))
-        : null);
+      const startAt =
+        asTimestampMaybe(r.startAt) ??
+        (r.data && r.horaInicio
+          ? combineDateTimeToTimestamp(String(r.data), String(r.horaInicio))
+          : null);
 
-    const minutosAntes = calcularMinutosAteInicio(startAt);
+      const minutosAntes = calcularMinutosAteInicio(startAt);
 
-    const evento = args.bypassClienteUidCheck ? "cancelamento_dono" : "cancelamento_cliente";
+      const evento = args.bypassClienteUidCheck ? "cancelamento_dono" : "cancelamento_cliente";
 
-    const financeiroUpdate = montarUpdateFinanceiro({
-      valorReais,
-      evento,
-      comissaoPercentual,
-      minutosAntesDoInicio: evento === "cancelamento_cliente" ? minutosAntes : undefined,
-    });
-
-    const pagamentoTipo = String(r.pagamentoTipo ?? "");
-    const valorClienteCentavos = Number(financeiroUpdate.valorClienteCentavos ?? 0);
-
-    deveTentarReembolso =
-      pagamentoTipo === "online" && valorClienteCentavos > 0;
-
-    // ✅ ESCRITAS DEPOIS
-    const disponibilidadeId = String(r.disponibilidadeId ?? "");
-    if (disponibilidadeId) {
-      const dispRef = doc(db, "disponibilidades", disponibilidadeId);
-      tx.update(dispRef, {
-        ativo: true,
-        reservadoPorUid: null,
-        reservadoEm: null,
+      const financeiroUpdate = montarUpdateFinanceiro({
+        valorReais,
+        evento,
+        comissaoPercentual,
+        minutosAntesDoInicio: evento === "cancelamento_cliente" ? minutosAntes : undefined,
       });
-    }
 
-    tx.update(reservaRef, {
-      status: "cancelada",
-      canceladaEm: serverTimestamp(),
-      canceladaPorUid: user.uid,
-      ...financeiroUpdate,
+      const pagamentoTipo = String(r.pagamentoTipo ?? "");
+      const valorClienteCentavos = Number(financeiroUpdate.valorClienteCentavos ?? 0);
+
+      deveTentarReembolso =
+        pagamentoTipo === "online" && valorClienteCentavos > 0;
+
+      const disponibilidadeId = String(r.disponibilidadeId ?? "");
+      if (disponibilidadeId) {
+        const dispRef = doc(db, "disponibilidades", disponibilidadeId);
+        tx.update(dispRef, {
+          ativo: true,
+          reservadoPorUid: null,
+          reservadoEm: null,
+        });
+      }
+
+      tx.update(reservaRef, {
+        status: "cancelada",
+        canceladaEm: serverTimestamp(),
+        canceladaPorUid: user.uid,
+        ...financeiroUpdate,
+      });
     });
-  });
+  } catch (e: any) {
+    console.error("ERRO REAL cancelarReserva:", e);
+    throw new Error(
+      e?.message || e?.code || "Falha ao cancelar reserva."
+    );
+  }
 
   if (deveTentarReembolso) {
     try {

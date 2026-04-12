@@ -780,7 +780,7 @@ const [toast, setToast] = useState<{
     return s > agoraMs;
   }
 
-  async function onCancelar(r: Reserva) {
+ async function onCancelar(r: Reserva) {
   if (!podeCancelar(r)) return;
 
   const ultimaHora = isReservaUltimaHora(r);
@@ -806,8 +806,15 @@ const [toast, setToast] = useState<{
 
     await carregar();
   } catch (e: any) {
-    console.error(e);
-    alert(e?.message ?? "Erro ao cancelar.");
+    console.error("ERRO AO CANCELAR:", e);
+
+    const msgErro =
+      e?.message ||
+      e?.code ||
+      "Erro ao cancelar a reserva.";
+
+    setErro(msgErro);
+    alert(msgErro);
   } finally {
     setCancelandoId("");
   }

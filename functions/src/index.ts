@@ -635,8 +635,8 @@ export const mpWebhook = onRequest(
   { region: "us-central1", secrets: [MERCADOPAGO_TOKEN] },
   async (req, res) => {
     try {
-      const MP_TOKEN = MERCADOPAGO_TOKEN.value();
-      if (!MP_TOKEN) {
+      const platformToken = MERCADOPAGO_TOKEN.value();
+      if (!platformToken) {
         res.status(200).send("ok");
         return;
       }
@@ -654,15 +654,47 @@ export const mpWebhook = onRequest(
         .toLowerCase()
         .trim();
 
-      logger.info("mpWebhook hit", { method: req.method, topicOrType, paymentId: paymentId ?? null });
+      logger.info("mpWebhook hit", {
+        method: req.method,
+        topicOrType,
+        paymentId: paymentId ?? null,
+      });
 
       if (!paymentId) {
         res.status(200).send("ok");
         return;
       }
 
+      // 1) tenta achar reserva por mpPaymentId
+      const reservaPorPaymentSnap = await db
+        .collection("reservas")
+        .where("mpPaymentId", "==", String(paymentId))
+        .limit(1)
+        .get();
+
+      let accessTokenParaConsulta = platformToken;
+      let reservaDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+
+      if (!reservaPorPaymentSnap.empty) {
+        reservaDoc = reservaPorPaymentSnap.docs[0];
+
+        const r = reservaDoc.data() as any;
+        const donoUid = String(r?.donoUid ?? "").trim();
+
+        if (donoUid) {
+          const donoSnap = await db.collection("users").doc(donoUid).get();
+          const donoData = donoSnap.exists ? (donoSnap.data() as any) : null;
+          const mpAccessTokenDono = String(donoData?.mpAccessToken ?? "").trim();
+
+          if (mpAccessTokenDono) {
+            accessTokenParaConsulta = mpAccessTokenDono;
+          }
+        }
+      }
+
+      // 2) consulta pagamento com o token correto
       const pr = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-        headers: { Authorization: `Bearer ${MP_TOKEN}` },
+        headers: { Authorization: `Bearer ${accessTokenParaConsulta}` },
       });
 
       const payment: any = await pr.json();
@@ -684,12 +716,7 @@ export const mpWebhook = onRequest(
         transactionAmount,
       });
 
-      if (!externalRef) {
-        res.status(200).send("ok");
-        return;
-      }
-
-      // ========= MULTA =========
+      // multa continua igual
       if (externalRef.startsWith("multa-")) {
         const uid = externalRef.replace("multa-", "").trim();
         if (!uid) {
@@ -698,78 +725,72 @@ export const mpWebhook = onRequest(
         }
 
         const multaRef = db.collection("multas").doc(uid);
-
         const patch: any = {
           mpPaymentId: String(paymentId),
           mpStatus: status || null,
           mpUltimaNotificacaoEm: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-if (status === "approved") {
-  const nowTs = admin.firestore.FieldValue.serverTimestamp();
+        if (status === "approved") {
+          const nowTs = admin.firestore.FieldValue.serverTimestamp();
 
-  patch.status = "pago";
-  patch.pagoEm = nowTs;
-  patch.valorPago = transactionAmount;
+          patch.status = "pago";
+          patch.pagoEm = nowTs;
+          patch.valorPago = transactionAmount;
 
-  await db.collection("users").doc(uid).set(
-    {
-      multaPendenteCentavos: 0,
-      multaQuitadaEm: nowTs,
-
-      // 🔓 remove bloqueio após pagar multa
-      suspensoAte: null,
-      suspensoMotivo: null,
-
-      // 🧼 recomeça limpo após quitar multa
-      noshowCount90d: 0,
-      multaUltimaGeradaEm: null,
-      penalidadesResetadasEm: nowTs,
-
-      // ✅ reputação resetada
-      reputacao: {
-        score: 100,
-        nivel: "excelente",
-        updatedAt: nowTs,
-      },
-
-      // ✅ penalidades resetadas
-      penalidades: {
-        noShows: 0,
-        cancelamentosUltimaHora: 0,
-        penalidadesAtualizadoEm: nowTs,
-      },
-    },
-    { merge: true }
-  );
-} else {
-  patch.status = "pendente";
-}
+          await db.collection("users").doc(uid).set(
+            {
+              multaPendenteCentavos: 0,
+              multaQuitadaEm: nowTs,
+              suspensoAte: null,
+              suspensoMotivo: null,
+              noshowCount90d: 0,
+              multaUltimaGeradaEm: null,
+              penalidadesResetadasEm: nowTs,
+              reputacao: {
+                score: 100,
+                nivel: "excelente",
+                updatedAt: nowTs,
+              },
+              penalidades: {
+                noShows: 0,
+                cancelamentosUltimaHora: 0,
+                penalidadesAtualizadoEm: nowTs,
+              },
+            },
+            { merge: true }
+          );
+        } else {
+          patch.status = "pendente";
+        }
 
         await multaRef.set(patch, { merge: true });
-
         res.status(200).send("ok");
         return;
       }
 
-      // ========= RESERVA =========
-      const reservaId = externalRef;
-      const reservaRef = db.collection("reservas").doc(reservaId);
-      const snap = await reservaRef.get();
-      if (!snap.exists) {
-        logger.warn("Reserva não encontrada para external_reference", { reservaId });
+      // 3) usa a reserva já encontrada por mpPaymentId, se tiver
+      let reservaRef: FirebaseFirestore.DocumentReference | null = null;
+      let r: any = null;
+
+      if (reservaDoc) {
+        reservaRef = reservaDoc.ref;
+        r = reservaDoc.data();
+      } else if (externalRef) {
+        reservaRef = db.collection("reservas").doc(externalRef);
+        const snap = await reservaRef.get();
+        if (!snap.exists) {
+          logger.warn("Reserva não encontrada para external_reference", { externalRef });
+          res.status(200).send("ok");
+          return;
+        }
+        r = snap.data() as any;
+      } else {
         res.status(200).send("ok");
         return;
       }
 
-      const r = snap.data() as any;
-
-      if (String(r.pagamentoStatus ?? "") === "pago" && status === "approved") {
-        res.status(200).send("ok");
-        return;
-      }
-
-            const statusReservaAtual = String(r?.status ?? "").toLowerCase();
+      const statusReservaAtual = String(r?.status ?? "").toLowerCase();
       const pagamentoStatusAtual = String(r?.pagamentoStatus ?? "").toLowerCase();
       const canceladaMotivoAtual = String(r?.canceladaMotivo ?? "").toLowerCase();
 
@@ -785,19 +806,17 @@ if (status === "approved") {
         },
       };
 
-      // ✅ Se já pagou, não faz nada
       if (pagamentoStatusAtual === "pago") {
         res.status(200).send("ok");
         return;
       }
 
-      // ✅ Se já foi cancelada por PIX expirado, não pode mais voltar para confirmada
       if (
         statusReservaAtual === "cancelada" &&
         canceladaMotivoAtual === "pix_expirado"
       ) {
         patch.pagamentoStatus = "expirado";
-        await reservaRef.update(patch);
+        await reservaRef!.update(patch);
         res.status(200).send("ok");
         return;
       }
@@ -808,7 +827,6 @@ if (status === "approved") {
         patch.pagoEm = admin.firestore.FieldValue.serverTimestamp();
         patch.valorPago = transactionAmount;
         patch.registradoPorUid = null;
-
         patch.statusRepasse = "repassado";
         patch.repassadoEm = admin.firestore.FieldValue.serverTimestamp();
       } else if (status === "cancelled" || status === "rejected") {
@@ -819,7 +837,7 @@ if (status === "approved") {
         patch.pagamentoStatus = "pendente";
       }
 
-      await reservaRef.update(patch);
+      await reservaRef!.update(patch);
 
       res.status(200).send("ok");
       return;
@@ -858,18 +876,18 @@ export const devApprovePix = onCall(
 
     const valor = Number(req.data?.valorPago ?? r.valor ?? r.preco ?? r.valorHora ?? 0) || null;
 
-    await reservaRef.update({
-      mpStatus: "approved",
-      pagamentoStatus: "pago",
-      pagoEm: admin.firestore.FieldValue.serverTimestamp(),
-      valorPago: valor,
-      mpUltimaNotificacaoEm: admin.firestore.FieldValue.serverTimestamp(),
-      mpAprovadoEmDev: true,
-      mpAprovadoPorUid: uid,
-
-      statusRepasse: "repassado",
-      repassadoEm: admin.firestore.FieldValue.serverTimestamp(),
-    });
+await reservaRef.update({
+  status: "confirmada",
+  mpStatus: "approved",
+  pagamentoStatus: "pago",
+  pagoEm: admin.firestore.FieldValue.serverTimestamp(),
+  valorPago: valor,
+  mpUltimaNotificacaoEm: admin.firestore.FieldValue.serverTimestamp(),
+  mpAprovadoEmDev: true,
+  mpAprovadoPorUid: uid,
+  statusRepasse: "repassado",
+  repassadoEm: admin.firestore.FieldValue.serverTimestamp(),
+});
 
     return { ok: true, reservaId, valorPago: valor };
   }

@@ -781,45 +781,37 @@ const [toast, setToast] = useState<{
   }
 
   async function onCancelar(r: Reserva) {
-    if (!podeCancelar(r)) return;
+  if (!podeCancelar(r)) return;
 
-    const ultimaHora = isReservaUltimaHora(r);
+  const ultimaHora = isReservaUltimaHora(r);
 
-    const msg = ultimaHora
-      ? `⚠️ Cancelamento de última hora\n\nCancelar este horário pode impactar sua reputação no app.\n\nTem certeza que deseja cancelar?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
-      : `Cancelar reserva?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`;
+  const msg = ultimaHora
+    ? `⚠️ Cancelamento de última hora\n\nCancelar este horário pode impactar sua reputação no app.\n\nTem certeza que deseja cancelar?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`
+    : `Cancelar reserva?\n\n${r.data} ${r.horaInicio}–${r.horaFim}`;
 
-    setConfirmData({
-  mensagem: msg,
-  onConfirm: async () => {
-    try {
-      setCancelandoId(r.id);
-      setErro(null);
+  const confirmou = window.confirm(msg);
+  if (!confirmou) return;
 
-      await cancelarReserva({ reservaId: r.id });
+  try {
+    setCancelandoId(r.id);
+    setErro(null);
 
-      setToast({
-        type: "success",
-        message: ultimaHora
-          ? "Reserva cancelada. Sua reputação pode ter sido impactada."
-          : "Reserva cancelada.",
-      });
+    await cancelarReserva({ reservaId: r.id });
 
-      await carregar();
-    } catch (e: any) {
-      console.error(e);
-      setToast({
-        type: "error",
-        message: e?.message ?? "Erro ao cancelar.",
-      });
-    } finally {
-      setCancelandoId("");
-    }
-  },
-});
+    alert(
+      ultimaHora
+        ? "Reserva cancelada. Sua reputação pode ter sido impactada."
+        : "Reserva cancelada."
+    );
 
-    return;
+    await carregar();
+  } catch (e: any) {
+    console.error(e);
+    alert(e?.message ?? "Erro ao cancelar.");
+  } finally {
+    setCancelandoId("");
   }
+}
 
   function CardReserva({
     r,

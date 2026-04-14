@@ -424,35 +424,52 @@ export async function finalizarReservaComoDono(args: {
     if (!snap.exists()) throw new Error("Reserva não encontrada.");
 
     const r: any = snap.data();
-    const status = String(r.status ?? "");
+const status = String(r.status ?? "");
 
-    if (status !== "confirmada" && status !== "agendada") {
-      throw new Error("Só é possível finalizar/no-show reservas confirmadas.");
-    }
+if (status !== "confirmada" && status !== "agendada") {
+  throw new Error("Só é possível finalizar/no-show reservas confirmadas.");
+}
 
-    // primeiro todas as leituras
-    const quadraId = String(r.quadraId ?? "");
-    const comissaoPercentual = await lerComissaoPercentualQuadraTx(tx, quadraId);
-    const valorReais = Number(r.valorPago ?? r.valor ?? 0);
+// primeiro todas as leituras
+const quadraId = String(r.quadraId ?? "");
+const donoUid = String(r.donoUid ?? "");
+if (!donoUid) throw new Error("donoUid não encontrado na reserva.");
 
-    const evento = args.naoCompareceu ? "noshow" : "normal";
-    const financeiroUpdate = montarUpdateFinanceiro({
-      valorReais,
-      evento,
-      comissaoPercentual,
-    });
+const financeiroRef = doc(db, "financeiro_donos", donoUid);
 
-    // depois as escritas
-    tx.update(reservaRef, {
-      status: "finalizada",
-      finalizadaEm: serverTimestamp(),
-      finalizadaPorTipo: "manual",
-      finalizadaPorUid: user.uid,
-      naoCompareceu: !!args.naoCompareceu,
-      naoCompareceuMarcadoEm: args.naoCompareceu ? serverTimestamp() : null,
-      naoCompareceuMarcadoPorUid: args.naoCompareceu ? user.uid : null,
-      ...financeiroUpdate,
-    });
+const comissaoPercentual = await lerComissaoPercentualQuadraTx(tx, quadraId);
+const valorReais = Number(r.valorPago ?? r.valor ?? 0);
+
+const evento = args.naoCompareceu ? "noshow" : "normal";
+const financeiroUpdate = montarUpdateFinanceiro({
+  valorReais,
+  evento,
+  comissaoPercentual,
+});
+
+const valorPlataforma = Number(financeiroUpdate.valorPlataformaCentavos ?? 0);
+
+// depois as escritas
+tx.update(reservaRef, {
+  status: "finalizada",
+  finalizadaEm: serverTimestamp(),
+  finalizadaPorTipo: "manual",
+  finalizadaPorUid: user.uid,
+  naoCompareceu: !!args.naoCompareceu,
+  naoCompareceuMarcadoEm: args.naoCompareceu ? serverTimestamp() : null,
+  naoCompareceuMarcadoPorUid: args.naoCompareceu ? user.uid : null,
+  ...financeiroUpdate,
+});
+
+tx.set(
+  financeiroRef,
+  {
+    donoUid,
+    saldoCentavos: increment(-valorPlataforma),
+    atualizadoEm: serverTimestamp(),
+  },
+  { merge: true }
+);
   });
 }
 

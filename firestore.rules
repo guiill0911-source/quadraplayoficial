@@ -115,9 +115,9 @@ service cloud.firestore {
     // 🔥 FINANCEIRO DONOS (NOVO BLOCO)
     // =========================
     match /financeiro_donos/{donoId} {
-      allow read: if isLoggedIn() && (uid() == donoId || isCeo());
-      allow write: if false;
-    }
+  allow read: if isLoggedIn() && (uid() == donoId || isCeo());
+  allow write: if isLoggedIn() && uid() == donoId;
+}
 
     // =========================
     // QUADRAS

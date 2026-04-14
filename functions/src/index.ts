@@ -58,9 +58,7 @@ function asCentavos(valorReais: number) {
   return roundInt(valorReais * 100);
 }
 
-function financeiroDonoRef(donoUid: string) {
-  return db.collection("financeiro_donos").doc(donoUid);
-}
+
 /**
  * 🔥 Motor Financeiro v1
  * OBS: tudo em centavos
@@ -1900,21 +1898,6 @@ const isDonoOuCeo = userData?.role === "dono" || userData?.role === "ceo";
         finalizadaPorUid: null,
       });
 
-      if (pagamentoTipo === "presencial") {
-        const donoFinRef = financeiroDonoRef(donoUid);
-
-        tx.set(
-          donoFinRef,
-          {
-            donoUid,
-            saldoCentavos: admin.firestore.FieldValue.increment(
-              -Number(financeiro.valorPlataformaCentavos ?? 0)
-            ),
-            atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-      }
 
       tx.update(dispRef, {
         reservadoPorUid: uid,

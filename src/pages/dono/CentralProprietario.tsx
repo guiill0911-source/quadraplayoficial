@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Header from "../../components/Header";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db, auth, app } from "../../services/firebase";
 import { useEffect, useState } from "react";
 import { getFunctions, httpsCallable } from "firebase/functions";
@@ -375,13 +375,42 @@ export default function CentralProprietario() {
           return;
         }
 
-        const financeiroRef = doc(db, "financeiro_donos", uid);
-        const financeiroSnap = await getDoc(financeiroRef);
+const financeiroRef = doc(db, "financeiro_donos", uid);
+const financeiroSnap = await getDoc(financeiroRef);
 
-        if (financeiroSnap.exists()) {
-          const data = financeiroSnap.data() as any;
-          setSaldo(Number(data?.saldoCentavos ?? 0));
-        }
+let saldoFirestore = 0;
+
+if (financeiroSnap.exists()) {
+  const data = financeiroSnap.data() as any;
+  saldoFirestore = Number(data?.saldoCentavos ?? 0);
+}
+
+const quadrasSnap = await getDocs(
+  query(collection(db, "quadras"), where("ownerId", "==", uid))
+);
+
+let existeReservaFinalizada = false;
+
+for (const quadraDoc of quadrasSnap.docs) {
+  const reservasSnap = await getDocs(
+    query(
+      collection(db, "reservas"),
+      where("quadraId", "==", quadraDoc.id),
+      where("status", "==", "finalizada")
+    )
+  );
+
+  if (!reservasSnap.empty) {
+    existeReservaFinalizada = true;
+    break;
+  }
+}
+
+if (existeReservaFinalizada) {
+  setSaldo(saldoFirestore);
+} else {
+  setSaldo(0);
+}
 
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);

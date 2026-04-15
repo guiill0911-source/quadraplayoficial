@@ -217,10 +217,19 @@ export async function gerarDisponibilidadesParaData(quadraId: string, data: stri
   const ownerId = String((quadraSnap.data() as any)?.ownerId ?? "").trim();
 if (!ownerId) throw new Error("Quadra sem ownerId.");
 
+const userSnap = await getDoc(doc(db, "users", ownerId));
+const userData = userSnap.exists() ? (userSnap.data() as any) : null;
+
+const trialGratisAte = userData?.trialGratisAte ?? null;
+const trialAtivo =
+  trialGratisAte &&
+  typeof trialGratisAte?.toMillis === "function" &&
+  trialGratisAte.toMillis() > Date.now();
+
 const finSnap = await getDoc(doc(db, "financeiro_donos", ownerId));
 const saldoCentavos = finSnap.exists() ? Number((finSnap.data() as any)?.saldoCentavos ?? 0) : 0;
 
-if (saldoCentavos <= -5000) {
+if (!trialAtivo && saldoCentavos <= -5000) {
   throw new Error("Sua quadra está bloqueada temporariamente por saldo pendente com a plataforma.");
 }
 

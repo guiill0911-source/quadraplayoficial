@@ -378,6 +378,22 @@ export default function CentralProprietario() {
 const financeiroRef = doc(db, "financeiro_donos", uid);
 const financeiroSnap = await getDoc(financeiroRef);
 
+const userRef = doc(db, "users", uid);
+const userSnap = await getDoc(userRef);
+
+let trialAtivo = false;
+
+if (userSnap.exists()) {
+  const userData = userSnap.data() as any;
+
+  const trialGratisAte = userData?.trialGratisAte ?? null;
+
+  trialAtivo =
+    trialGratisAte &&
+    typeof trialGratisAte?.toMillis === "function" &&
+    trialGratisAte.toMillis() > Date.now();
+}
+
 let saldoFirestore = 0;
 
 if (financeiroSnap.exists()) {
@@ -406,14 +422,6 @@ for (const quadraDoc of quadrasSnap.docs) {
   }
 }
 
-if (existeReservaFinalizada) {
-  setSaldo(saldoFirestore);
-} else {
-  setSaldo(0);
-}
-
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
           const userData = userSnap.data() as any;

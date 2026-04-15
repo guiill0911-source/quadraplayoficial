@@ -205,12 +205,35 @@ async function lerComissaoPercentualQuadraTx(tx: any, quadraId: string): Promise
   if (!id) return 5;
 
   const quadraRef = doc(db, "quadras", id);
-  const snap = await tx.get(quadraRef);
-  if (!snap.exists()) return 5;
+  const quadraSnap = await tx.get(quadraRef);
+  if (!quadraSnap.exists()) return 5;
 
-  const data: any = snap.data();
-  const raw = Number(data?.comissaoPercentual ?? 5);
+  const quadraData: any = quadraSnap.data();
+
+  const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
+
+  if (donoUid) {
+    const userRef = doc(db, "users", donoUid);
+    const userSnap = await tx.get(userRef);
+
+    if (userSnap.exists()) {
+      const userData: any = userSnap.data();
+      const trialGratisAte = userData?.trialGratisAte ?? null;
+
+      const trialAtivo =
+        trialGratisAte &&
+        typeof trialGratisAte?.toMillis === "function" &&
+        trialGratisAte.toMillis() > Date.now();
+
+      if (trialAtivo) {
+        return 0;
+      }
+    }
+  }
+
+  const raw = Number(quadraData?.comissaoPercentual ?? 5);
   if (!Number.isFinite(raw)) return 5;
+
   return Math.max(0, Math.min(100, raw));
 }
 

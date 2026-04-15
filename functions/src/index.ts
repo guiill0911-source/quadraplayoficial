@@ -1598,17 +1598,38 @@ export const autoMarcarPagamentoPresencial = onSchedule(
           continue;
         }
 
-        // comissão da quadra
-        let comissaoPercentual = 5;
-        const quadraId = String(r?.quadraId ?? "").trim();
-        if (quadraId) {
-          const quadraSnap = await db.collection("quadras").doc(quadraId).get();
-          const quadraData = quadraSnap.exists ? (quadraSnap.data() as any) : null;
-          const raw = Number(quadraData?.comissaoPercentual ?? 5);
-          if (Number.isFinite(raw)) {
-            comissaoPercentual = Math.max(0, Math.min(100, raw));
-          }
-        }
+      // comissão da quadra com trial grátis de 30 dias
+let comissaoPercentual = 5;
+const quadraId = String(r?.quadraId ?? "").trim();
+
+if (quadraId) {
+  const quadraSnap = await db.collection("quadras").doc(quadraId).get();
+  const quadraData = quadraSnap.exists ? (quadraSnap.data() as any) : null;
+
+  const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
+
+  let trialAtivo = false;
+
+  if (donoUid) {
+    const donoSnap = await db.collection("users").doc(donoUid).get();
+    const donoData = donoSnap.exists ? (donoSnap.data() as any) : null;
+
+    const trialGratisAte = donoData?.trialGratisAte ?? null;
+    trialAtivo =
+      trialGratisAte &&
+      typeof trialGratisAte?.toMillis === "function" &&
+      trialGratisAte.toMillis() > Date.now();
+  }
+
+  if (trialAtivo) {
+    comissaoPercentual = 0;
+  } else {
+    const raw = Number(quadraData?.comissaoPercentual ?? 5);
+    if (Number.isFinite(raw)) {
+      comissaoPercentual = Math.max(0, Math.min(100, raw));
+    }
+  }
+}
 
         const financeiro = calcularFinanceiroV1({
           valorTotalCentavos: asCentavos(valor),
@@ -1811,15 +1832,27 @@ const isDonoOuCeo = userData?.role === "dono" || userData?.role === "ceo";
       }
 
       const quadraData = quadraSnap.data() as any;
-      const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
-      if (!donoUid) {
-        throw new HttpsError("failed-precondition", "Quadra sem ownerId.");
-      }
+const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
+if (!donoUid) {
+  throw new HttpsError("failed-precondition", "Quadra sem ownerId.");
+}
 
-      const comissaoPercentual = Math.max(
-        0,
-        Math.min(100, Number(quadraData?.comissaoPercentual ?? disp?.comissaoPercentual ?? 5))
-      );
+const donoRef = db.collection("users").doc(donoUid);
+const donoSnap = await tx.get(donoRef);
+const donoData = donoSnap.exists ? (donoSnap.data() as any) : null;
+
+const trialGratisAte = donoData?.trialGratisAte ?? null;
+const trialAtivo =
+  trialGratisAte &&
+  typeof trialGratisAte?.toMillis === "function" &&
+  trialGratisAte.toMillis() > Date.now();
+
+const comissaoPercentual = trialAtivo
+  ? 0
+  : Math.max(
+      0,
+      Math.min(100, Number(quadraData?.comissaoPercentual ?? disp?.comissaoPercentual ?? 5))
+    );
 
       const financeiro = calcularFinanceiroV1({
         valorTotalCentavos: asCentavos(valor),

@@ -13,6 +13,7 @@ import EditarQuadra from "./pages/dono/EditarQuadra";
 import GerenciarHorariosMes from "./pages/dono/GerenciarHorariosMes";
 import CentralProprietario from "./pages/dono/CentralProprietario";
 import DonoFinanceiro from "./pages/dono/DonoFinanceiro";
+import PagamentoSaldo from "./pages/dono/PagamentoSaldo";
 
 import MinhasReservas from "./pages/MinhasReservas";
 import AvaliarReserva from "./pages/AvaliarReserva";
@@ -247,6 +248,19 @@ export default function AppRoutes() {
             </RequireAuth>
           }
         />
+
+        <Route
+  path="/dono/pagamento-saldo"
+  element={
+    <RequireAuth>
+      <RequireTerms>
+        <RequireRole role="dono">
+          <PagamentoSaldo />
+        </RequireRole>
+      </RequireTerms>
+    </RequireAuth>
+  }
+/>
 
         <Route
           path="/dono/quadra/:id/reservas"

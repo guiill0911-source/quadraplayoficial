@@ -141,6 +141,9 @@ export type AppUser = {
   emailVerificado?: boolean;
   telefoneVerificado?: boolean;
 
+  termosDonoAceitosEm?: any;
+versaoTermosDonoAceitos?: string | null;
+
   mpOAuthConnected?: boolean;
   mpConnectionStatus?: "not_connected" | "pending" | "connected" | "error";
   mpConnectedAt?: any;
@@ -330,6 +333,12 @@ export async function getMeuPerfil(uid: string): Promise<AppUser | null> {
         ? x.telefoneVerificado
         : undefined,
 
+            termosDonoAceitosEm: x.termosDonoAceitosEm ?? null,
+    versaoTermosDonoAceitos:
+      x.versaoTermosDonoAceitos != null
+        ? String(x.versaoTermosDonoAceitos)
+        : null,
+
     mpOAuthConnected:
       typeof x.mpOAuthConnected === "boolean"
         ? x.mpOAuthConnected
@@ -376,6 +385,12 @@ export async function buscarPerfilPorTelefone(
       typeof x.telefoneVerificado === "boolean"
         ? x.telefoneVerificado
         : undefined,
+
+            termosDonoAceitosEm: x.termosDonoAceitosEm ?? null,
+    versaoTermosDonoAceitos:
+      x.versaoTermosDonoAceitos != null
+        ? String(x.versaoTermosDonoAceitos)
+        : null,
 
     mpOAuthConnected:
       typeof x.mpOAuthConnected === "boolean"

@@ -60,6 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: "atleta",
     emailVerificado: !!fbUser.emailVerified,
     telefoneVerificado: false,
+    termosDonoAceitosEm: null,
+    versaoTermosDonoAceitos: null,
   },
 });
       } catch {

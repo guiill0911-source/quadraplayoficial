@@ -28,6 +28,7 @@ import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import QuemSomos from "./pages/QuemSomos";
 import PagamentosRegras from "./pages/PagamentosRegras";
 import AceiteTermos from "./pages/AceiteTermos";
+import AceiteTermosDono from "./pages/AceiteTermosDono";
 
 import RequireAuth from "./services/RequireAuth";
 import RequireRole from "./services/RequireRole";
@@ -115,6 +116,15 @@ export default function AppRoutes() {
             </RequireAuth>
           }
         />
+
+        <Route
+  path="/aceite-termos-dono"
+  element={
+    <RequireAuth>
+      <AceiteTermosDono />
+    </RequireAuth>
+  }
+/>
 
 <Route path="/" element={<Navigate to="/login" replace />} />
 

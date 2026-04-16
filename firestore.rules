@@ -61,63 +61,22 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isLoggedIn();
 
-      allow create: if isLoggedIn()
-        && uid() == userId
-        && request.resource.data.keys().hasOnly([
-          "role",
-          "nome",
-          "sobrenome",
-          "telefone",
-          "telefoneNormalizado",
-          "telefoneVerificado",
-          "fotoUrl",
-          "cpf",
-          "cpfHash",
-          "cpfUltimos4",
-          "cpfConsentidoEm",
-          "cpfVerificadoEm",
-          "email",
-          "emailVerificado",
-          "termosAceitosEm",
-          "versaoTermosAceitos",
-          "createdAt",
-          "updatedAt"
-        ])
-        && (
-          !("role" in request.resource.data) ||
-          request.resource.data.role in ["atleta", "dono"]
-        );
+      // Libera o próprio usuário autenticado a criar seu doc
+      allow create: if isLoggedIn() && uid() == userId;
 
-      allow update: if isLoggedIn()
-        && uid() == userId
-        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          "nome",
-          "sobrenome",
-          "telefone",
-          "telefoneNormalizado",
-          "telefoneVerificado",
-          "fotoUrl",
-          "cpf",
-          "cpfHash",
-          "cpfUltimos4",
-          "cpfConsentidoEm",
-          "cpfVerificadoEm",
-          "emailVerificado",
-          "termosAceitosEm",
-          "versaoTermosAceitos",
-          "updatedAt"
-        ]);
+      // Libera o próprio usuário autenticado a atualizar seu doc
+      allow update: if isLoggedIn() && uid() == userId;
 
       allow delete: if isCeo();
     }
 
     // =========================
-    // 🔥 FINANCEIRO DONOS (NOVO BLOCO)
+    // FINANCEIRO DONOS
     // =========================
     match /financeiro_donos/{donoId} {
-  allow read: if isLoggedIn() && (uid() == donoId || isCeo());
-  allow write: if isLoggedIn() && uid() == donoId;
-}
+      allow read: if isLoggedIn() && (uid() == donoId || isCeo());
+      allow write: if isLoggedIn() && uid() == donoId;
+    }
 
     // =========================
     // QUADRAS
@@ -198,14 +157,14 @@ service cloud.firestore {
     // RESERVAS
     // =========================
     match /reservas/{reservaId} {
-allow read: if isLoggedIn() && (
-  isCeo()
-  || (isAtleta() && resource.data.clienteUid == uid())
-  || (isDono() && (
-      isOwnerOfQuadra(resource.data.quadraId)
-      || resource.data.clienteUid == uid()
-  ))
-);
+      allow read: if isLoggedIn() && (
+        isCeo()
+        || (isAtleta() && resource.data.clienteUid == uid())
+        || (isDono() && (
+          isOwnerOfQuadra(resource.data.quadraId)
+          || resource.data.clienteUid == uid()
+        ))
+      );
 
       allow create: if isLoggedIn()
         && isAtleta()

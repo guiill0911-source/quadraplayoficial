@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { Link } from "react-router-dom";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { db } from "../services/firebase";
 import { TERMOS_VERSAO_ATUAL } from "../config/termos";
 import Header from "../components/Header";
-import { lerPendingProfile, limparPendingProfile } from "../services/authService";
+import { limparPendingProfile } from "../services/authService";
 
 const styles = {
   page: {
@@ -330,14 +330,12 @@ const styles = {
 };
 
 export default function AceiteTermosDono() {
-  const navigate = useNavigate();
-  const location = useLocation();
   const auth = useMemo(() => getAuth(), []);
 
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const from = (location.state as any)?.from || "/";
+  const DESTINO_POS_ACEITE = "/dono";
 
   async function aceitar() {
     const user = auth.currentUser;
@@ -361,7 +359,9 @@ export default function AceiteTermosDono() {
       );
 
       limparPendingProfile();
-navigate(from, { replace: true });
+setTimeout(() => {
+  window.location.replace("/home");
+}, 300);
     } finally {
       setSaving(false);
     }

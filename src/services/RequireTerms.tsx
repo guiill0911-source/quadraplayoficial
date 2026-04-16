@@ -26,10 +26,18 @@ export default function RequireTerms({ children }: Props) {
       const snap = await getDoc(ref);
       const data = snap.exists() ? snap.data() : null;
 
-      const versao = (data?.versaoTermosAceitos as string | undefined) ?? null;
-      const aceitosEm = data?.termosAceitosEm ?? null;
+      const role = (data?.role as string | undefined) ?? null;
 
-      const aceitou = !!aceitosEm && versao === TERMOS_VERSAO_ATUAL;
+if (role === "dono") {
+  setOk(true);
+  setLoading(false);
+  return;
+}
+
+const versao = (data?.versaoTermosAceitos as string | undefined) ?? null;
+const aceitosEm = data?.termosAceitosEm ?? null;
+
+const aceitou = !!aceitosEm && versao === TERMOS_VERSAO_ATUAL;
 
       setOk(aceitou);
       setLoading(false);

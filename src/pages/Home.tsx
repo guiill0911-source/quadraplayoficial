@@ -276,6 +276,7 @@ export default function Home() {
   const [saldoCentavos, setSaldoCentavos] = useState<number>(0);
   const [carregandoSaldo, setCarregandoSaldo] = useState(true);
   const [favoritaSavingId, setFavoritaSavingId] = useState<string | null>(null);
+  const [mostrarCardPrimeiraReserva, setMostrarCardPrimeiraReserva] = useState(false);
 
   const [hoveredQuadraId, setHoveredQuadraId] = useState<string | null>(null);
   const isIosSafari =
@@ -399,34 +400,43 @@ const valor =
     return unsubscribe;
   }, [user]);
 
-  useEffect(() => {
-    async function carregarSaldo() {
-      if (!user?.uid) {
-        setSaldoCentavos(0);
-        setCarregandoSaldo(false);
-        return;
-      }
-
-      try {
-        setCarregandoSaldo(true);
-        const snap = await getDoc(doc(db, "users", user.uid));
-
-        if (snap.exists()) {
-          const data = snap.data() as any;
-          setSaldoCentavos(Number(data?.saldo ?? 0));
-        } else {
-          setSaldoCentavos(0);
-        }
-      } catch (e) {
-        console.error("Erro ao carregar saldo:", e);
-        setSaldoCentavos(0);
-      } finally {
-        setCarregandoSaldo(false);
-      }
+ useEffect(() => {
+  async function carregarSaldo() {
+    if (!user?.uid) {
+      setSaldoCentavos(0);
+      setMostrarCardPrimeiraReserva(false);
+      setCarregandoSaldo(false);
+      return;
     }
 
-    carregarSaldo();
-  }, [user?.uid]);
+    try {
+      setCarregandoSaldo(true);
+      const snap = await getDoc(doc(db, "users", user.uid));
+
+      if (snap.exists()) {
+        const data = snap.data() as any;
+
+        setSaldoCentavos(Number(data?.saldo ?? 0));
+
+        const ehAtleta = String(data?.role ?? "") === "atleta";
+        const descontoJaUsado = data?.primeiraReservaDescontoUsado === true;
+
+        setMostrarCardPrimeiraReserva(ehAtleta && !descontoJaUsado);
+      } else {
+        setSaldoCentavos(0);
+        setMostrarCardPrimeiraReserva(false);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar saldo:", e);
+      setSaldoCentavos(0);
+      setMostrarCardPrimeiraReserva(false);
+    } finally {
+      setCarregandoSaldo(false);
+    }
+  }
+
+  carregarSaldo();
+}, [user?.uid]);
 
   useEffect(() => {
     async function carregarFavoritas() {
@@ -1135,6 +1145,26 @@ if (score >= 90) {
                 >
                   Sua próxima partida começa aqui.
                 </h1>
+
+               {mostrarCardPrimeiraReserva ? (
+  <div
+    style={{
+      marginTop: 10,
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "8px 12px",
+      borderRadius: 999,
+      background: "linear-gradient(135deg, #8ae809, #6fd306)",
+      color: "#ffff",
+      fontWeight: 900,
+      fontSize: 12,
+      boxShadow: "0 10px 20px rgba(16,185,129,0.25)",
+    }}
+  >
+    🔥 5% OFF na sua primeira reserva
+  </div>
+) : null}
 
                 <p
                   style={{

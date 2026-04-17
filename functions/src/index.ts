@@ -1718,6 +1718,10 @@ export const createReservaSegura = onCall(
 const userData = userSnap.exists ? (userSnap.data() as any) : null;
 const isDonoOuCeo = userData?.role === "dono" || userData?.role === "ceo";
 
+const primeiraReservaDescontoUsado = userData?.primeiraReservaDescontoUsado === true;
+const atletaPrimeiraReservaComDesconto =
+  userData?.role === "atleta" && !primeiraReservaDescontoUsado;
+
     const dispSnapPreview = await dispRef.get();
     if (!dispSnapPreview.exists) {
       throw new HttpsError("not-found", "Horário não encontrado.");
@@ -1811,10 +1815,15 @@ const isDonoOuCeo = userData?.role === "dono" || userData?.role === "ceo";
       const valorBase = Number(disp.valor ?? 0);
       const valorPromo = Number(disp.valorPromocional ?? 0);
 
-      const valor =
-        promocaoAtiva && valorPromo > 0
-          ? valorPromo
-          : valorBase;
+    let valor =
+  promocaoAtiva && valorPromo > 0
+    ? valorPromo
+    : valorBase;
+
+// ✅ DESCONTO PRIMEIRA RESERVA
+if (atletaPrimeiraReservaComDesconto) {
+  valor = Number((valor * 0.95).toFixed(2));
+}
 
       if (!data || !horaInicio || !horaFim) {
         throw new HttpsError("failed-precondition", "Slot inválido.");
@@ -1905,6 +1914,13 @@ const comissaoPercentual = trialAtivo
           telefone: telefoneCliente,
         },
 
+
+        descontoAplicado: atletaPrimeiraReservaComDesconto,
+        percentualDesconto: atletaPrimeiraReservaComDesconto ? 5 : 0,
+        valorOriginal:
+  promocaoAtiva && valorPromo > 0
+    ? valorPromo
+    : valorBase,
         pagamentoTipo,
         pagamentoStatus: "pendente",
         pagoEm: null,
@@ -1937,6 +1953,17 @@ const comissaoPercentual = trialAtivo
         reservadoEm: admin.firestore.FieldValue.serverTimestamp(),
         ativo: false,
       });
+
+      if (atletaPrimeiraReservaComDesconto) {
+  const userRef = db.collection("users").doc(uid);
+  tx.set(
+    userRef,
+    {
+      primeiraReservaDescontoUsado: true,
+    },
+    { merge: true }
+  );
+}
 
       const limiteRef = db.collection("users").doc(uid).collection("limitesReservasDia").doc(data);
       tx.set(

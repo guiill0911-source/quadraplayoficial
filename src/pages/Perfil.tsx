@@ -392,7 +392,7 @@ export default function Perfil() {
 </div>
 
             <div style={styles.profileInfo}>
-  <h1 style={styles.title}>PERFIL TESTE 999</h1>
+  <h1 style={styles.title}>{data?.nome || "Meu perfil"}</h1>
 
   <p style={styles.subtitle}>
     {data?.nome} {data?.sobrenome}

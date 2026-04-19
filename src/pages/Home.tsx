@@ -1146,7 +1146,7 @@ if (score >= 90) {
                   Sua próxima partida começa aqui.
                 </h1>
 
-               {mostrarCardPrimeiraReserva ? (
+                {mostrarCardPrimeiraReserva ? (
   <div
     style={{
       marginTop: 10,

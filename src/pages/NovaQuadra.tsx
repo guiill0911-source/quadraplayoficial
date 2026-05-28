@@ -14,6 +14,8 @@ type Comodidades = {
   mesaSinuca: boolean;
   iluminacao: boolean;
   coletes: boolean;
+  estacionamento: boolean;
+  gravarJogo: boolean;
 };
 
 const comodidadesPadrao: Comodidades = {
@@ -22,6 +24,8 @@ const comodidadesPadrao: Comodidades = {
   mesaSinuca: false,
   iluminacao: false,
   coletes: false,
+  estacionamento: false,
+  gravarJogo: false,
 };
 
 const ESPORTES_OPCOES = [
@@ -707,6 +711,8 @@ export default function NovaQuadra() {
   const [esportes, setEsportes] = useState<EsporteId[]>([]);
   const [valoresPorEsporte, setValoresPorEsporte] = useState<Record<string, string>>({});
 
+  const [quantidadesPorEsporte, setQuantidadesPorEsporte] = useState<Record<string, number>>({});
+
   const [fotoCapa, setFotoCapa] = useState<File | null>(null);
   const [fotoPreviewUrl, setFotoPreviewUrl] = useState<string | null>(null);
 
@@ -739,14 +745,21 @@ useEffect(() => {
       const novo = jaTem ? prev.filter((x) => x !== id) : [...prev, id];
 
       if (jaTem) {
-        setValoresPorEsporte((m) => {
-          const copy = { ...m };
-          delete copy[id];
-          return copy;
-        });
-      } else {
-        setValoresPorEsporte((m) => ({ ...m, [id]: m[id] ?? "" }));
-      }
+  setValoresPorEsporte((m) => {
+    const copy = { ...m };
+    delete copy[id];
+    return copy;
+  });
+
+  setQuantidadesPorEsporte((m) => {
+    const copy = { ...m };
+    delete copy[id];
+    return copy;
+  });
+} else {
+  setValoresPorEsporte((m) => ({ ...m, [id]: m[id] ?? "" }));
+  setQuantidadesPorEsporte((m) => ({ ...m, [id]: m[id] ?? 1 }));
+}
 
       return novo;
     });
@@ -759,6 +772,11 @@ useEffect(() => {
   function setValorDoEsporte(esporteId: string, valor: string) {
     setValoresPorEsporte((prev) => ({ ...prev, [esporteId]: valor }));
   }
+
+  function setQuantidadeDoEsporte(esporteId: string, quantidade: number) {
+  const qtd = Math.max(1, Math.min(20, Number(quantidade) || 1));
+  setQuantidadesPorEsporte((prev) => ({ ...prev, [esporteId]: qtd }));
+}
 
   function handleFotosQuadraChange(e: React.ChangeEvent<HTMLInputElement>) {
   const files = e.target.files;
@@ -850,6 +868,8 @@ useEffect(() => {
     }
 
     const valoresConvertidos: Record<string, number> = {};
+    const quantidadesConvertidas: Record<string, number> = {};
+
     for (const esp of esportes) {
       const valStr = valoresPorEsporte[esp] ?? "";
       const valNum = parseMoneyToNumber(valStr);
@@ -858,7 +878,13 @@ useEffect(() => {
         return;
       }
       valoresConvertidos[esp] = valNum;
+
+      const qtd = quantidadesPorEsporte[esp] ?? 1;
+quantidadesConvertidas[esp] = qtd;
     }
+
+
+
 
     const enderecoStr = buildEnderecoCompleto({
       rua,
@@ -955,6 +981,7 @@ const cidadeExibicao = ufNormalizada
         longitude,
         esportes,
         valoresPorEsporte: valoresConvertidos,
+        quantidadesPorEsporte: quantidadesConvertidas,
         valorHora: valorGeralNumero,
         comodidades,
         funcionamento,
@@ -1331,15 +1358,38 @@ fotosPaths: fotosQuadraPaths,
                           {esportesSelecionadosOrdenados.map((espId) => {
                             const label = getEsporteLabel(espId);
                             return (
-                              <label key={espId} style={styles.field}>
-                                <span style={styles.label}>{label}</span>
-                                <input
-                                  placeholder="Ex: 120"
-                                  value={valoresPorEsporte[espId] ?? ""}
-                                  onChange={(e) => setValorDoEsporte(espId, e.target.value)}
-                                  style={styles.input}
-                                />
-                              </label>
+                              <div key={espId} style={{ display: "grid", gap: 8 }}>
+  <span style={styles.label}>{label}</span>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+      gap: 10,
+    }}
+  >
+    {/* VALOR */}
+    <input
+      placeholder="Valor (ex: 120)"
+      value={valoresPorEsporte[espId] ?? ""}
+      onChange={(e) => setValorDoEsporte(espId, e.target.value)}
+      style={styles.input}
+    />
+
+    {/* QUANTIDADE */}
+    <input
+      type="number"
+      min={1}
+      max={20}
+      placeholder="Qtd de quadras"
+      value={quantidadesPorEsporte[espId] ?? 1}
+      onChange={(e) =>
+        setQuantidadeDoEsporte(espId, Number(e.target.value))
+      }
+      style={styles.input}
+    />
+  </div>
+</div>
                             );
                           })}
                         </div>
@@ -1367,6 +1417,8 @@ fotosPaths: fotosQuadraPaths,
                       { key: "mesaSinuca", label: "Mesa de sinuca" },
                       { key: "iluminacao", label: "Iluminação" },
                       { key: "coletes", label: "Coletes" },
+                      { key: "estacionamento", label: "Estacionamento" },
+{ key: "gravarJogo", label: "Gravar jogo" },
                     ].map((item) => {
                       const ativo = comodidades[item.key as keyof Comodidades];
                       return (

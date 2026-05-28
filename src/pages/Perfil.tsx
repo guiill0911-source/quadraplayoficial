@@ -15,6 +15,15 @@ import {
   orderBy,
   updateDoc,
 } from "firebase/firestore";
+
+import {
+  criarRecaptcha,
+  enviarCodigoVinculacaoCelular,
+  confirmarCodigoCelular,
+} from "../services/authService";
+
+import { RecaptchaVerifier } from "firebase/auth";
+
 import { Link } from "react-router-dom";
 import {
   ouvirResumoReputacaoDoUsuario,
@@ -141,6 +150,13 @@ export default function Perfil() {
   const [reputacao, setReputacao] = useState<ResumoReputacao>(
     resumoReputacaoPadrao()
   );
+
+const [telefone, setTelefone] = useState("");
+const [codigoSMS, setCodigoSMS] = useState("");
+const [etapaSMS, setEtapaSMS] = useState<"inicial" | "codigo">("inicial");
+const [verificandoCelular, setVerificandoCelular] = useState(false);
+
+const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
 
   async function handleUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
   const file = e.target.files?.[0];
@@ -355,6 +371,80 @@ export default function Perfil() {
     }
   }
 
+  async function handleEnviarCodigoCelular() {
+  if (!user?.uid) return;
+
+  try {
+    setVerificandoCelular(true);
+
+    const tel = data?.telefone || "";
+    if (!tel) {
+      alert("Você não tem um celular cadastrado.");
+      return;
+    }
+
+    // cria recaptcha se não existir
+    let verifier = recaptcha;
+
+    if (!verifier) {
+      verifier = criarRecaptcha("recaptcha-container");
+      setRecaptcha(verifier);
+    }
+
+    if (!verifier) {
+  throw new Error("Não foi possível iniciar a verificação do celular.");
+}
+
+await enviarCodigoVinculacaoCelular(tel, verifier);
+
+    setEtapaSMS("codigo");
+
+    alert("Código enviado por SMS.");
+  } catch (e: any) {
+    console.error(e);
+    alert(e?.message || "Erro ao enviar código.");
+  } finally {
+    setVerificandoCelular(false);
+  }
+}
+
+async function handleConfirmarCodigoCelular() {
+  if (!user?.uid) return;
+
+  if (!codigoSMS.trim()) {
+    alert("Digite o código recebido por SMS.");
+    return;
+  }
+
+  try {
+    setVerificandoCelular(true);
+
+    await confirmarCodigoCelular(codigoSMS.trim());
+
+    const userRef = doc(db, "users", user.uid);
+
+    await updateDoc(userRef, {
+      telefoneVerificado: true,
+      updatedAt: new Date(),
+    });
+
+    setData((prev: any) => ({
+      ...prev,
+      telefoneVerificado: true,
+    }));
+
+    setEtapaSMS("inicial");
+    setCodigoSMS("");
+
+    alert("Celular verificado com sucesso!");
+  } catch (e: any) {
+    console.error(e);
+    alert(e?.message || "Código inválido ou expirado.");
+  } finally {
+    setVerificandoCelular(false);
+  }
+}
+
   if (!user) return <p>Você precisa estar logado.</p>;
   if (loading) return <p>Carregando...</p>;
 
@@ -436,6 +526,71 @@ export default function Perfil() {
                   {data?.emailVerificado ? "Verificado" : "Não verificado"}
                 </div>
               </div>
+
+<div style={styles.configBox}>
+  <div style={styles.configLabel}>Celular</div>
+
+  <div style={styles.configValue}>
+    {data?.telefone || "—"}
+  </div>
+
+  <div style={{ marginTop: 6 }}>
+    {data?.telefoneVerificado ? (
+      <span style={{ color: "green", fontWeight: 700 }}>
+        ✔ Verificado
+      </span>
+    ) : (
+      <span style={{ color: "red", fontWeight: 700 }}>
+        Não verificado
+      </span>
+    )}
+  </div>
+
+  {!data?.telefoneVerificado && (
+    <div style={{ marginTop: 10 }}>
+      {etapaSMS === "inicial" && (
+        <>
+          <button
+            style={styles.configBtn}
+            onClick={handleEnviarCodigoCelular}
+            disabled={verificandoCelular}
+          >
+            {verificandoCelular ? "Enviando..." : "Verificar celular"}
+          </button>
+
+          <div id="recaptcha-container" style={{ marginTop: 10 }} />
+        </>
+      )}
+
+      {etapaSMS === "codigo" && (
+        <>
+          <input
+            type="text"
+            placeholder="Digite o código SMS"
+            value={codigoSMS}
+            onChange={(e) => setCodigoSMS(e.target.value)}
+            style={{
+              width: "100%",
+              padding: 10,
+              borderRadius: 8,
+              border: "1px solid #ccc",
+              marginBottom: 8,
+            }}
+          />
+
+          <button
+            style={styles.configBtn}
+            onClick={handleConfirmarCodigoCelular}
+            disabled={verificandoCelular}
+          >
+            {verificandoCelular ? "Confirmando..." : "Confirmar código"}
+          </button>
+        </>
+      )}
+    </div>
+  )}
+</div>
+
             </div>
 
             <div style={styles.configActions}>

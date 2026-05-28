@@ -8,8 +8,8 @@ export type EventoFinanceiro =
 
 export type MotivoPolitica =
   | "normal"
-  | "cancelamento_cliente_mais_1h"
-  | "cancelamento_cliente_menos_1h"
+  | "cancelamento_cliente_mais_6h"
+  | "cancelamento_cliente_menos_6h"
   | "cancelamento_dono"
   | "noshow";
 
@@ -134,15 +134,15 @@ export function calcularDistribuicaoFinanceira(
   if (evento === "cancelamento_cliente") {
     const minutos = params.minutosAntesDoInicio ?? 0;
 
-    if (minutos >= 60) {
+    if (minutos >= 360) {
       // reembolso 100%
-      motivoPolitica = "cancelamento_cliente_mais_1h";
+      motivoPolitica = "cancelamento_cliente_mais_6h";
       valorClienteCentavos = valorTotalCentavos;
       valorDonoCentavos = 0;
       valorPlataformaCentavos = 0;
     } else {
       // reembolso 90% / 5% dono / 5% plataforma (fixo, não depende da comissão da quadra)
-      motivoPolitica = "cancelamento_cliente_menos_1h";
+      motivoPolitica = "cancelamento_cliente_menos_6h";
       valorClienteCentavos = pctOf(valorTotalCentavos, 70);
       valorDonoCentavos = pctOf(valorTotalCentavos, 20);
       valorPlataformaCentavos = pctOf(valorTotalCentavos, 10);

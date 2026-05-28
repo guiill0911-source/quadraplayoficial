@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logoQuadraPlay from "../assets/logo.png";
 import {
+  buscarPerfilPorTelefone,
   confirmarCodigoCelular,
   criarRecaptcha,
   enviarCodigoCelular,
@@ -546,11 +547,23 @@ useEffect(() => {
       return;
     }
 
-    setLoading(true);
+   setLoading(true);
 
-    try {
-      const verifier = criarRecaptcha("recaptcha-container");
-      const resultado = await enviarCodigoCelular(telefone, verifier);
+try {
+  const perfil = await buscarPerfilPorTelefone(tel);
+
+  if (!perfil) {
+    setErro("Esse celular não está cadastrado. Crie uma conta primeiro.");
+    return;
+  }
+
+  if (!perfil.telefoneVerificado) {
+    setErro("Esse celular ainda não foi verificado no perfil. Entre com e-mail e verifique seu celular primeiro.");
+    return;
+  }
+
+  const verifier = criarRecaptcha("recaptcha-container");
+  const resultado = await enviarCodigoCelular(tel, verifier);
       console.log("SMS ENVIADO", resultado);
 
       setCodigoEnviado(true);
@@ -576,15 +589,7 @@ useEffect(() => {
     try {
       const user = await confirmarCodigoCelular(codigo.trim());
 
-      const perfil = await getMeuPerfil(user.uid);
-
-      if (!perfil) {
-        await logout();
-        setErro("Esse celular ainda não está vinculado a uma conta. Cadastre-se primeiro.");
-        return;
-      }
-
-      nav("/home");
+nav("/home");
     } catch (e: any) {
       setErro(e?.message ?? "Código inválido ou expirado.");
     } finally {

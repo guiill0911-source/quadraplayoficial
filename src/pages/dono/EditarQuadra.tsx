@@ -12,6 +12,8 @@ type Comodidades = {
   mesaSinuca: boolean;
   iluminacao: boolean;
   coletes: boolean;
+  estacionamento: boolean;
+  gravarJogo: boolean;
 };
 
 const comodidadesPadrao: Comodidades = {
@@ -20,6 +22,8 @@ const comodidadesPadrao: Comodidades = {
   mesaSinuca: false,
   iluminacao: false,
   coletes: false,
+  estacionamento: false,
+  gravarJogo: false,
 };
 
 const ESPORTES_OPCOES = [
@@ -736,6 +740,8 @@ export default function EditarQuadra() {
       if (k === "mesaSinuca") return "Mesa de sinuca";
       if (k === "iluminacao") return "Iluminação";
       if (k === "coletes") return "Coletes";
+      if (k === "estacionamento") return "Estacionamento";
+if (k === "gravarJogo") return "Gravar jogo";
       return k;
     });
 
@@ -1000,6 +1006,8 @@ export default function EditarQuadra() {
                             { key: "mesaSinuca", label: "Mesa de sinuca" },
                             { key: "iluminacao", label: "Iluminação" },
                             { key: "coletes", label: "Coletes" },
+                            { key: "estacionamento", label: "Estacionamento" },
+                            { key: "gravarJogo", label: "Gravar jogo" },
                           ].map((item) => {
                             const ativo = comodidades[item.key as keyof Comodidades];
                             return (

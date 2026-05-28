@@ -33,7 +33,6 @@ export async function buscarQuadrasDisponiveis(filtro: FiltroDisponibilidade) {
   snap.forEach((d) => {
     const x = d.data() as any;
 
-    // filtra no front para aceitar docs que não tenham os campos explícitos
     if (x?.bloqueado === true) return;
     if (x?.removido === true) return;
 
@@ -43,20 +42,22 @@ export async function buscarQuadrasDisponiveis(filtro: FiltroDisponibilidade) {
   return Array.from(quadraIds);
 }
 
-// ✅ Usado em /quadra/:id: retorna os slots realmente disponíveis (com id do documento)
+// ✅ Usado em /quadra/:id: retorna os slots realmente disponíveis
 export type SlotDisponibilidade = {
   id: string;
   quadraId: string;
   esporte: string;
-  data: string; // "YYYY-MM-DD"
-  horaInicio: string; // "HH:MM"
-  horaFim: string; // "HH:MM"
+  data: string;
+  horaInicio: string;
+  horaFim: string;
   valor: number;
+  numeroQuadra?: number;
   ativo: boolean;
+
   promocaoAtiva?: boolean;
   valorOriginal?: number | null;
   valorPromocional?: number | null;
-  // novos campos (opcional no tipo, mas na prática virão)
+
   bloqueado?: boolean;
   removido?: boolean;
 };
@@ -80,6 +81,7 @@ export async function buscarSlotsDisponiveisDaQuadra(params: {
 
   const slots: SlotDisponibilidade[] = snap.docs.map((d) => {
     const x = d.data() as any;
+
     return {
       id: d.id,
       quadraId: String(x.quadraId ?? ""),
@@ -88,10 +90,12 @@ export async function buscarSlotsDisponiveisDaQuadra(params: {
       horaInicio: String(x.horaInicio ?? ""),
       horaFim: String(x.horaFim ?? ""),
       valor: Number(x.valor ?? 0),
+      numeroQuadra: Number(x.numeroQuadra ?? 1),
       ativo: Boolean(x.ativo),
-        promocaoAtiva: x.promocaoAtiva === true,
-  valorOriginal: x.valorOriginal != null ? Number(x.valorOriginal) : null,
-  valorPromocional: x.valorPromocional != null ? Number(x.valorPromocional) : null,
+
+      promocaoAtiva: x.promocaoAtiva === true,
+      valorOriginal: x.valorOriginal != null ? Number(x.valorOriginal) : null,
+      valorPromocional: x.valorPromocional != null ? Number(x.valorPromocional) : null,
 
       bloqueado: x.bloqueado === true,
       removido: x.removido === true,
@@ -102,8 +106,12 @@ export async function buscarSlotsDisponiveisDaQuadra(params: {
     (s) => s.bloqueado !== true && s.removido !== true
   );
 
-  // ordenar por hora
-  slotsFiltrados.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+  slotsFiltrados.sort((a, b) => {
+    const porHora = a.horaInicio.localeCompare(b.horaInicio);
+    if (porHora !== 0) return porHora;
+
+    return Number(a.numeroQuadra ?? 1) - Number(b.numeroQuadra ?? 1);
+  });
 
   return slotsFiltrados;
 }

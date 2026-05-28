@@ -14,6 +14,7 @@ import { db } from "./firebase";
 type QuadraDoc = {
   esportes?: string[];
   valoresPorEsporte?: Record<string, number>;
+  quantidadesPorEsporte?: Record<string, number>;
   valorHora?: number | null;
 
   funcionamento?: any; // semanal
@@ -205,8 +206,8 @@ type ExistingDisp = {
   data: any;
 };
 
-function makeSlotKey(esporte: string, horaInicio: string, horaFim: string) {
-  return `${esporte}__${horaInicio}__${horaFim}`;
+function makeSlotKey(esporte: string, horaInicio: string, horaFim: string, numeroQuadra: number) {
+  return `${esporte}__${horaInicio}__${horaFim}__quadra_${numeroQuadra}`;
 }
 
 export async function gerarDisponibilidadesParaData(quadraId: string, data: string) {
@@ -240,6 +241,7 @@ if (!trialAtivo && saldoCentavos <= -5000) {
 
   const valoresPorEsporte = quadra.valoresPorEsporte ?? {};
   const valorHoraGeral = typeof quadra.valorHora === "number" ? quadra.valorHora : null;
+  const quantidadesPorEsporte = quadra.quantidadesPorEsporte ?? {};
 
   // 1) primeiro: tenta exceção por data
   let slots: SlotGerado[] = [];
@@ -300,7 +302,8 @@ if (!trialAtivo && saldoCentavos <= -5000) {
     const hf = String(item.data?.horaFim ?? "");
     if (!esp || !hi || !hf) continue;
 
-    const chave = makeSlotKey(esp, hi, hf);
+    const numeroQuadra = Number(item.data?.numeroQuadra ?? 1);
+const chave = makeSlotKey(esp, hi, hf, numeroQuadra);
 
     // guarda apenas slots removidos e sem reserva, que podem ser reativados
     if (item.data?.removido === true && !item.data?.reservadoPorUid) {
@@ -320,53 +323,57 @@ if (!trialAtivo && saldoCentavos <= -5000) {
       throw new Error(`Quadra sem valor definido para o esporte: ${esp}`);
     }
 
-    for (const s of slots) {
-      const { startAt, endAt } = buildStartEndAt(data, s.horaInicio, s.horaFim);
+    const quantidade = Math.max(1, Math.min(20, Number(quantidadesPorEsporte[esp] ?? 1)));
 
-      const payload = {
-        quadraId,
-        data,
-        esporte: esp,
-        horaInicio: s.horaInicio,
-        horaFim: s.horaFim,
-        valor,
-        
-        // 🔥 PROMOÇÃO (novo)
-promocaoAtiva: false,
-valorOriginal: valor,
-valorPromocional: null,
-promocaoCriadaEm: null,
-promocaoCriadaPorUid: null,
+for (const s of slots) {
+  const { startAt, endAt } = buildStartEndAt(data, s.horaInicio, s.horaFim);
 
-        startAt,
-        endAt,
+  for (let numeroQuadra = 1; numeroQuadra <= quantidade; numeroQuadra++) {
+    const payload = {
+      quadraId,
+      data,
+      esporte: esp,
+      numeroQuadra,
+      horaInicio: s.horaInicio,
+      horaFim: s.horaFim,
+      valor,
 
-        ativo: true,
+      promocaoAtiva: false,
+      valorOriginal: valor,
+      valorPromocional: null,
+      promocaoCriadaEm: null,
+      promocaoCriadaPorUid: null,
 
-        reservadoPorUid: null,
-        reservadoEm: null,
-        liberadoEm: null,
+      startAt,
+      endAt,
 
-        bloqueado: false,
-        bloqueadoPorUid: null,
+      ativo: true,
 
-        removido: false,
+      reservadoPorUid: null,
+      reservadoEm: null,
+      liberadoEm: null,
 
-        createdAt: serverTimestamp(),
-      };
+      bloqueado: false,
+      bloqueadoPorUid: null,
 
-      const chave = makeSlotKey(esp, s.horaInicio, s.horaFim);
-      const existenteRemovido = existentesPorChave.get(chave);
+      removido: false,
 
-      if (existenteRemovido) {
-        await setDoc(doc(db, "disponibilidades", existenteRemovido.id), payload);
-      } else {
-        await setDoc(doc(col), payload);
-      }
+      createdAt: serverTimestamp(),
+    };
 
-      criados++;
+    const chave = makeSlotKey(esp, s.horaInicio, s.horaFim, numeroQuadra);
+    const existenteRemovido = existentesPorChave.get(chave);
+
+    if (existenteRemovido) {
+      await setDoc(doc(db, "disponibilidades", existenteRemovido.id), payload);
+    } else {
+      await setDoc(doc(col), payload);
     }
+
+    criados++;
   }
+}
+}
 
   return { criados, jaExistia: false, fechado: false };
 }

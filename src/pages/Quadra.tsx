@@ -1868,9 +1868,10 @@ const fotos = [
                       </p>
 
                       <div style={styles.slotMeta}>
-                        <span style={styles.slotBadgeStrong}>
-                          {ESPORTES_LABELS[s.esporte] ?? s.esporte}
-                        </span>
+                       <span style={styles.slotBadgeStrong}>
+  {(ESPORTES_LABELS[s.esporte] ?? s.esporte)}
+  {typeof s.numeroQuadra === "number" ? ` • Quadra ${s.numeroQuadra}` : ""}
+</span>
 
                         <span style={styles.subtleBadge}>{getValorBadge(s.valor)}</span>
                       </div>

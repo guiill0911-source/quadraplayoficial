@@ -231,17 +231,33 @@ export async function loginComEmail(email: string, senha: string) {
 }
 
 export function criarRecaptcha(containerId: string) {
-  if (window.recaptchaVerifier) {
-    try {
-      window.recaptchaVerifier.clear();
-    } catch {}
+  if ((window as any).recaptchaVerifier) {
+    return (window as any).recaptchaVerifier;
   }
 
-  window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-    size: "normal",
-  });
+if ((window as any).recaptchaVerifier) {
+  try {
+    (window as any).recaptchaVerifier.clear();
+  } catch {}
+}
 
-  return window.recaptchaVerifier;
+const verifier = new RecaptchaVerifier(
+  auth,
+  containerId,
+  {
+      size: "normal",
+      callback: () => {
+        console.log("Recaptcha resolvido");
+      },
+      "expired-callback": () => {
+        console.warn("Recaptcha expirou");
+      },
+    },
+  );
+
+  (window as any).recaptchaVerifier = verifier;
+
+  return verifier;
 }
 
 export async function enviarCodigoCelular(

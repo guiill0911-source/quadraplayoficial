@@ -1608,6 +1608,9 @@ if (quadraId) {
 
   const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
 
+  const clienteUidReserva = String(r?.clienteUid ?? "").trim();
+const reservaFeitaPeloDono = clienteUidReserva === donoUid;
+
   let trialAtivo = false;
 
   if (donoUid) {
@@ -1621,14 +1624,17 @@ if (quadraId) {
       trialGratisAte.toMillis() > Date.now();
   }
 
-  if (trialAtivo) {
-    comissaoPercentual = 0;
-  } else {
-    const raw = Number(quadraData?.comissaoPercentual ?? 5);
-    if (Number.isFinite(raw)) {
-      comissaoPercentual = Math.max(0, Math.min(100, raw));
-    }
+ if (reservaFeitaPeloDono) {
+  comissaoPercentual = 0;
+} else if (trialAtivo) {
+  comissaoPercentual = 0;
+} else {
+  const raw = Number(quadraData?.comissaoPercentual ?? 5);
+
+  if (Number.isFinite(raw)) {
+    comissaoPercentual = Math.max(0, Math.min(100, raw));
   }
+}
 }
 
         const financeiro = calcularFinanceiroV1({
@@ -1842,7 +1848,9 @@ if (atletaPrimeiraReservaComDesconto) {
 
       const quadraData = quadraSnap.data() as any;
 const donoUid = String(quadraData?.ownerId ?? quadraData?.ownerUid ?? "").trim();
+const reservaFeitaPeloDono = uid === donoUid;
 if (!donoUid) {
+  
   throw new HttpsError("failed-precondition", "Quadra sem ownerId.");
 }
 
@@ -1856,7 +1864,9 @@ const trialAtivo =
   typeof trialGratisAte?.toMillis === "function" &&
   trialGratisAte.toMillis() > Date.now();
 
-const comissaoPercentual = trialAtivo
+const comissaoPercentual = reservaFeitaPeloDono
+  ? 0
+  : trialAtivo
   ? 0
   : Math.max(
       0,
